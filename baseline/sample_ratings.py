@@ -3,29 +3,38 @@ import random
 import glob
 
 count = 0
-if len(argv) > 1:
-    users = True
+
 limit = 1000
-sample = []
+u_sample = []
+m_sample = []
 
-
-for line in os.stdin:
+def update_sample(sample,count,limit,line):
     if (count < limit):
         sample.append(line)
     else:
-            val = random.randint(0,count-1)
-            if (val < limit):
-                sample[val] = line
-        count +=1
+        val = random.randint(0,count-1)
+        if (val < limit):
+            sample[val] = line
 
-count = 0
-
-for line in sample:
-    foo = line.strip().split(",")
-    if (users):
-        print count, foo[1]
-    else:
-        print count, foo[0]
+for line in sys.stdin:
+    fields = line.strip().split(",")
+    update_sample(u_sample,count,limit,fields[1])
+    update_sample(m_sample,count,limit,fields[0])
     count +=1
 
-        
+def permute(sample,count):
+    for i in range(1,count):
+        val = random.randint(0,i-1)
+        swap = sample[val]
+        sample[val] =sample[i]
+        sample[i] = swap
+
+permute(u_sample,count)
+permute(m_sample,count)
+
+for i in range(0,count):
+    print "%s,%s" % (m_sample[i],u_sample[i])
+
+
+
+

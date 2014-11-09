@@ -1,0 +1,2 @@
+cat data_set_sample.txt | grep -v 2005- >  training_set_pre_2005.txt
+cat data_set_sample.txt | grep 2005-  >  test_set_eq_2005.txt

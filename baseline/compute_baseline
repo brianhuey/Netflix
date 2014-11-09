@@ -1,4 +1,6 @@
 #!/usr/bin/bash
 
-python sample_ratings.py users < training_set_sample.txt > users.txt
-python sample_ratings.py  < training_set_sample.txt > movies.txt
+python sample_ratings.py < ../data_sample/training_set_pre_2005.txt > unpruned_pairs.txt
+python prune.py  unpruned_pairs.txt < ../data_sample/training_set_pre_2005.txt > pruned_pairs.txt
+python check.py pruned_pairs.txt < ../data_sample/test_set_eq_2005.txt 
+
