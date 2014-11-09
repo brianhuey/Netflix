@@ -1,0 +1,6 @@
+RT_mapper/RT_movie_titles.txt
+.*
+/data
+/training_set_reshape/training_set_reshape.txt
+/training_set_with_movie_ids/data_set_w_mid/mv*.txt
+/training_set_with_movie_ids/training_set_w_mid/mv*.txt
