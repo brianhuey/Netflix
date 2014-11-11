@@ -6,7 +6,7 @@ import sys
 for line in sys.stdin:
     fields = line.strip().split(",")
     #print fields
-    print '%s,%s,%s,%s' % (fields[1], fields[0], fields[2], fields[3])
+    print '%s\t%s\t%s\t%s' % (fields[1], fields[0], fields[2], fields[3])
 
 
-                  
+

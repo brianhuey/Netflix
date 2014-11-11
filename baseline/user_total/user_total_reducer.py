@@ -8,7 +8,7 @@ import sys
 user_dic = {'total users': 0}
 
 for line in sys.stdin:
-    fields = line.strip().split(",")
+    fields = line.strip().split("\t")
     #print fields
     if fields[0] in user_dic:
     	user_dic[fields[0]] += 1
@@ -17,7 +17,7 @@ for line in sys.stdin:
         user_dic['total users'] += 1
 
 for key in user_dic:
-	print '%s,%s' % (key, user_dic[key])
+	print '%s\t%s' % (key, user_dic[key])
 
 
 

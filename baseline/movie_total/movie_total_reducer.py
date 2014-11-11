@@ -8,7 +8,7 @@ import sys
 movie_dic = {'total movies': 0}
 
 for line in sys.stdin:
-    fields = line.strip().split(",")
+    fields = line.strip().split("\t")
     #print fields
     if fields[0] in movie_dic:
     	movie_dic[fields[0]] += 1
@@ -17,7 +17,7 @@ for line in sys.stdin:
         movie_dic['total movies'] += 1
 
 for key in movie_dic:
-	print '%s,%s' % (key, movie_dic[key])
+	print '%s\t%s' % (key, movie_dic[key])
 
 
 
