@@ -20,5 +20,5 @@ for line in dictionary:
     deviation = int(dictionary[line]) / float(total_movies)
     dictionary[line] = deviation - overall_rate
     total += dictionary[line]
-    print '%s\t%s' % (line, dictionary[line])
-# print total # Used for checking the sum of deviations: should be ~0
+    print '%s\t%s\t%s' % ('user_avg', line, dictionary[line])
+print total # Used for checking the sum of deviations: should be ~0
