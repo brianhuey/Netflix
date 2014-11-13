@@ -1,25 +1,34 @@
 import sys
 import random
 import glob
-
+""" Samples 100,000 observations from the training set to
+    create a validation set that matches the size of the
+    KDD-provided test set. In addition we output the remaining
+    observations as the training set """
 count = 0
-
-limit = 1000
+limit = 100
+# validation set
 sample = []
-
-fnames = glob.glob("training_set_w_mid/*.txt")
+# remainder is training set
+training = []
+fnames = glob.glob("../training_set_reshape/training_set_1000.txt")
 
 for fname in fnames:
     file = open(fname)
+    size = 1000 # Calculated using 'wc -l training_set_reshape.txt'
     for line in file:
-        if (count < limit):
+        # populate sample list with 100k obs
+        val = random.randint(0, size)
+        if (val < limit):
             sample.append(line)
+        # once sample is populated, generate random number
         else:
-            val = random.randint(0,count-1)
-            if (val < limit):
-                sample[val] = line
-        count +=1
+            training.append(line)
 
 for line in sample:
-    print line.strip()
+    print '%s,%s' % ('validation', line.strip())
+
+for line in training:
+    print '%s,%s' % ('training', line.strip())
+
 
