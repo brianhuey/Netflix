@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+read path filename
+hadoop fs -getmerge path filename
+aws s3 cp filename path/filename
