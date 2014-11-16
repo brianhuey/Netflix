@@ -132,7 +132,7 @@ def normalize_kind_of(X,p):
 
 def evaluate_gradients(A,U,V,p,p_sample_size):
     (n,m) = A.shape
-    rmse = 0.0
+    mse = 0.0
     count = 0
     del_U = nd.zeros(U.shape)
     del_V = nd.zeros(V.shape)
@@ -147,7 +147,7 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
             del_U[row,:] -= V[:,col]*diff*(1.0*n/A.nnz)
             del_V[:,col] -= U[row,:]*diff*(1.0*m/A.nnz)
                 
-            rmse += diff*diff
+            mse += diff*diff
             count+=1
 
     for i in xrange(p_sample_size):
@@ -161,13 +161,12 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
         del_U[row,:] -= V[:,col]*diff*(n*1.0/p_sample_size)
         del_V[:,col] -= U[row,:]*diff*(m*1.0/p_sample_size)
 
-        rmse += diff*diff
+        mse += diff*diff
         count+=1
         
-    return (rmse/(1.0*count),del_U,del_V)
+    return (mse/(1.0*count),del_U,del_V)
             
-iterations = 50
-
+iterations = 100
 step_size = .05
 
 def hack_nmf_iter(A,k,p,p_sample_size):
@@ -184,7 +183,7 @@ def hack_nmf_iter(A,k,p,p_sample_size):
 
     for i in xrange(0,iterations):
         (error,del_U,del_V) =  evaluate_gradients(A,U,V,p,p_sample_size)
-        print("rmse", error, i)
+        print("rmse", math.sqrt(error), i)
         
         U -= step_size*del_U
         U = fix_barrier(U,p)
@@ -200,6 +199,9 @@ def hack_nmf_iter(A,k,p,p_sample_size):
         # print("column 9 of V", V[:5,9])
 
     return(U,V)
+
+
+#### Testing below here....
 
 def gen_rand_factor(n,k,p):
 
@@ -276,6 +278,28 @@ def inverse_map(the_mapping):
         reverse_mapping[the_mapping[key]] = key
     return reverse_mapping
 
+def print_movie_factor(U,reverse_movie,i,to_print=5):
+    
+    (n,k) = U.shape
+
+    f = open("../data/movie_titles.txt")
+
+    movie_id_to_title = {}
+
+    for line in f:
+        fields = line.strip().split(",")
+
+        movie_id_to_title[fields[0]] = fields[2]
+
+    pairs = []
+    for j in xrange(n):
+        pairs.append((reverse_movie[j],U[j][i]))
+
+    s_pairs = sorted(pairs, key= lambda pair: pair[1],reverse=True)
+
+    for k in xrange(to_print):
+        print ("%s, %0.2f" % (movie_id_to_title[s_pairs[k][0]], s_pairs[k][1]))
+
 def driver_movie_data_test(train_filename,test_filename,k):
     (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
 
@@ -304,7 +328,8 @@ def driver_movie_data_test(train_filename,test_filename,k):
         print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
 
     print ("test rsme", error)
-    return(U1,V1)
+    print_movie_factor(U,reverse_movie, k/2)
+    return(U1,V1,reverse_movie,reverse_user)
 
 #test_nmf_iter(100,100,10,.7,binary=True)
 
@@ -315,11 +340,12 @@ def driver_movie_data_test(train_filename,test_filename,k):
 #driver_movie_data("../data_sample/data_set_sample.txt",10)
 #driver_movie_data("../data/sample.100K.txt",5)
 
-(U,V) = driver_movie_data_test("../data/sample.100K.train.txt",
-                               "../data/sample.100K.test.txt",5)
+(U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.100K.train.txt",
+                                                          "../data/sample.100K.test.txt",5)
 
+    
+    
+    
 
 
             
-
-
