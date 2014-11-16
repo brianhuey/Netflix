@@ -60,14 +60,13 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
         movie_id = fields[0]
         user_id = fields[1]
         
+        if discard and ((not movie_id in movie_ids) or (not user_id in user_ids)):
+            continue
+
         if not movie_id in movie_ids:
-            if discard:
-                continue
             movie_ids[movie_id] = n_movies
             n_movies+=1
         if not user_id in user_ids:
-            if discard:
-                continue
             user_ids[user_id] = n_users
             n_users += 1
             
@@ -167,7 +166,7 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
         
     return (rmse/(1.0*count),del_U,del_V)
             
-iterations = 10
+iterations = 50
 
 step_size = .05
 
@@ -243,7 +242,6 @@ def test_nmf_iter(n,m,k,p,binary=False):
 
     hack_nmf_iter(A,k,p,100)
 
-
 def k_types_test_nmf(n,m,k,dn,dm):
     U = nd.zeros((n,k))
     V = nd.zeros((k,m))
@@ -272,13 +270,38 @@ def driver_movie_data(filename,k):
     (U1,V1) = hack_nmf_iter(A,2*k,p,100)
 
 
+def inverse_map(the_mapping):
+    reverse_mapping = {}
+    for key in the_mapping.keys():
+        reverse_mapping[the_mapping[key]] = key
+    return reverse_mapping
+
 def driver_movie_data_test(train_filename,test_filename,k):
     (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
 
-    (U1,V1) = hack_nmf_iter(A,2*k,.07,12*A.nnz)
+    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz)
     
     (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
-    (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,12*A.nnz)
+    (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz)
+
+
+    reverse_user = inverse_map(user_ids)
+    reverse_movie = inverse_map(movie_ids)
+    
+
+    outfile = open("test.predictions","w")
+    (n,m) = A.shape
+    for row in xrange(n):
+        for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
+            col = A.indices[row_col_index]
+            elt = A.data[row_col_index]
+            print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+
+    outfile = open("test.rndpairs.predictions","w")
+    for n_pairs in xrange(1000):
+        row = r.randint(0,n-1)
+        col = r.randint(0,m)
+        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
 
     print ("test rsme", error)
     return(U1,V1)
