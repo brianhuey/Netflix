@@ -1,0 +1,109 @@
+
+1)  Idea:  using Non-negative factorization to develop
+    user features and movie features to then predict
+    scores.
+       A "feature" is a vector. 
+       One prediction algorithm for a rating-movie pair
+       is to compute the dot product of the user feature
+       vector and the move vector.
+       
+       Other learning methods could possibly be used.
+
+       Also, one can pre-seed this method with a background
+       probability, p, of the rating being present by
+       including one extra dimension that is hardcoded
+       to have a product of p (where p can depend
+       on the independent assumption, is proportional
+       to user rating probability times movie rating probability
+       by particular user)  That is, independent probabilities
+       can be represented by a rank 1 matrix (i.e., a single
+       number for each movie outer producted with a single 
+       number for each user.)
+
+       Also, one can use side information to modify
+       background probabilities based on movie release
+       dates and user first rating times.  This will
+       introduce factors for different timing periods.
+       For example, a recent user rater should perhaps have higher
+       probability for recent movies than older movies, so
+       should have a separate number based on release date.
+       This may already be learned in the other factors
+       anyway (as might the background as well.)
+
+
+
+2)  Coded NMF implementation so that 
+
+      a) it can be moved to map reduce....
+      b) experient with various heuristics...
+
+  Algorith Outline
+
+    1) Our version uses gradient descent on the rmse cost function, with
+     a tunable combination of 
+
+        (a) summing rmse over non-zeros.
+        (b) summing over random pairs of movie-users to force
+            zeros.
+
+
+       
+     2) In enforces positivity on the weights in the matrix
+     factor by moving all weights away from zero if they
+     get too close to zero, and making negative weights
+     positive if the gradient pushes them to negative.
+
+     3) It also normalizes the factors (using a Gramm-Schmitt type
+         procedure to make sure all the factors don't simply repeat).
+	 We again enforce positivity here by staying away from zero.
+
+   Tested:
+
+      On generated test cases with known non-negative factorizations,
+      our method seems to converge well.  (Getting very close to
+      the original factorizations.)  Our test cases include both
+      continuous and binary factors. 
+
+      We also tested on samples of the complete data. See Current Evaluation
+      below for more details.
+
+   TODO:
+      1)  Maybe think about experimenting with different staying
+          away from being negative heuristics.
+      2)  Code up the background probability factors.
+          Maybe add explicit factors based on movie release dates,
+	  user first rating time.
+
+      3)  Maybe introduce heuristics to get sparse factors, i.e., factors
+          with few non-zero (or actually large) components.  Right
+          now "the stay away from negative heuristic" yields very non-sparse
+	  vectors, since it makes all numbers be strictly greater
+	  than zero. Perhaps setting small numbers to zero in the final
+	  prediction phase will improve generalization.  Explicitly
+	  driving small numbers down and big numbers up in the factor
+	  should make them more "sparse". Figure out how to add this
+	  to the gradient descent routine would be interesting.
+
+     4) Code up on map-reduce.  Technically for 200,000,000 ratings,
+        it may be better to just use a desktop.  The disk tradeoff may
+	be large.   But, it would still be interesting.
+	  
+
+3) Current evaluation.
+
+   Used 100K samples for preliminary engineering.
+
+   Divided into training pre-2004 and test 2005 (We are
+   not using 2006 until the final report so that we
+   don't falsely overfit to the final output.)
+
+   Currently, we do see that our method is learning
+   something.  For example, on the real ratings our
+   average prediction is around .7, where for random
+   (possibly unrated) movie-user pairs, our prediction
+   is around .4.
+
+   One needs to push these numbers apart (perhaps using
+   a logistic function) but the signal is definitely
+   statistically significant for the two kinds of ratings
+   at this preliminary point. 
