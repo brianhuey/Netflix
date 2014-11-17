@@ -9,3 +9,4 @@ We are working the Netflix dataset used in the 2007 KDD Cup competition which pr
 <br>/make_predictions - Make predictions and compute RMSE against test set
 <br>/training_set_sample - Data sets sampled from original KDD training set
 <br>/training_set_with_movie_ids - Code to reshape training data in to usable format (movie, user, rating, date)
+<br>/nmf - Create and run non-negative matrix factorization alogrithm
