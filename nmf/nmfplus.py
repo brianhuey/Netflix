@@ -15,10 +15,10 @@ p = .07
 
 
 # Make all negative values positive.
-# by simply rounding up. 
+# by simply rounding up.
 def fix_barrier(X,p):
     (n,k) = X.shape
-    
+
     level = math.sqrt(p)
     negatives = 0
     for i in xrange(0,n):
@@ -31,11 +31,11 @@ def fix_barrier(X,p):
     print ("negatives fixed:", negatives)
     return (X)
 
-coverage = 2 # should be more than 1. 
+coverage = 2 # should be more than 1.
 
 # Samples rows of the matrix and averages
 # them to produce a k row "approximation"
-# of the original matrix. 
+# of the original matrix.
 def init_vecs(A,k,left=True):
     B = A
     if left == True:
@@ -44,7 +44,7 @@ def init_vecs(A,k,left=True):
     for i in xrange(0,k):
         v = []
         for j in xrange(0,B.shape[1]):
-            if r.randint(0,k) < coverage: 
+            if r.randint(0,k) < coverage:
                 v.append(1.0)
             else:
                 v.append(0.0)
@@ -58,7 +58,7 @@ def init_vecs(A,k,left=True):
 #  - will take dictionary so that one can translate test data to use
 #  - same matrix that was formed using training data.
 def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =False):
-    
+
     f = open(filename)
 
     row = []
@@ -67,10 +67,10 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
 
     for line in f:
         fields = line.strip().split(",")
-        
+
         movie_id = fields[0]
         user_id = fields[1]
-        
+
         if discard and ((not movie_id in movie_ids) or (not user_id in user_ids)):
             continue
 
@@ -80,7 +80,7 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
         if not user_id in user_ids:
             user_ids[user_id] = n_users
             n_users += 1
-            
+
         row.append(movie_ids[movie_id])
         column.append(user_ids[user_id])
         # values.append(float(fields[2]))
@@ -91,7 +91,7 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
 
 min_scale = .1
 
-#  This code does gram-schmidt orthogonalization, 
+#  This code does gram-schmidt orthogonalization,
 #  except it makes sure all entries are positive.
 def normalize_kind_of(X,p):
     (k,n) = X.shape
@@ -107,7 +107,7 @@ def normalize_kind_of(X,p):
         a = X[i,:]
         old_norm = math.sqrt(nd.dot(a,a))
         total_old_norm += old_norm
-        
+
         # Make ith factor "orthogonal" to all previous factors.
         for j in xrange(1,i):
             a = X[i,:]
@@ -116,8 +116,8 @@ def normalize_kind_of(X,p):
             mag_b = math.sqrt(mag_b_squared)
             value = nd.dot(a,b)
             mag_a = math.sqrt(nd.dot(a,a))
-            
-            # Main stuff here. 
+
+            # Main stuff here.
             X[i,:] = a - (value/mag_b)*(b/mag_b)
 
             # Error checking code below.
@@ -147,7 +147,7 @@ def normalize_kind_of(X,p):
     # print ("total normalization", total_normalization)
     # print("total new norm", total_new_norm)
     # print ("total old norm", total_old_norm)
-        
+
     return X
 
 
@@ -172,7 +172,7 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
 
             # and vice versa.
             del_V[:,col] -= U[row,:]*diff*(1.0*m/A.nnz)
-                
+
             # Compute Function.
             mse += diff*diff
 
@@ -194,14 +194,14 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
 
         mse += diff*diff
         count+=1
-        
+
     return (mse/(1.0*count),del_U,del_V)
-            
-iterations = 40
+
+iterations = 1
 step_size = .05
 
-# Main Procedure: iteratively run gradient descent 
-#  method. 
+# Main Procedure: iteratively run gradient descent
+#  method.
 def hack_nmf_iter(A,k,p,p_sample_size):
     (n,m) = A.shape
     U = nd.transpose(init_vecs(A,k,left=False))
@@ -215,11 +215,11 @@ def hack_nmf_iter(A,k,p,p_sample_size):
     AT = A.transpose()
 
     for i in xrange(0,iterations):
-        
+
         #Compute Gradients (and function.)
         (error,del_U,del_V) =  evaluate_gradients(A,U,V,p,p_sample_size)
         print("rmse", math.sqrt(error), i)
-        
+
         # do Step for U
         U -= step_size*del_U
         U = fix_barrier(U,p)
@@ -247,17 +247,17 @@ def gen_rand_factor(n,k,p):
 
     level = math.sqrt(p)
     U = nd.zeros((n,k))
-    ones = []    
+    ones = []
     for i in xrange(0,n):
         for j in xrange(0,k):
             if (r.randint(0,int(1.0/level)) < 1):
                 U[i,j] = 1.0
             else:
                 scale = r.randint(-1,1)
-                U[i,j] = level*(2**scale)    
+                U[i,j] = level*(2**scale)
     return (U)
 
-# Generate a random 0-1 matrix 
+# Generate a random 0-1 matrix
 #  which is sparse.
 def gen_rand_factor(n,k,p,binary=True):
 
@@ -271,18 +271,18 @@ def gen_rand_factor(n,k,p,binary=True):
             else:
                 if (not binary):
                     scale = r.randint(-1,1)
-                    U[i,j] = level*(2**scale)    
+                    U[i,j] = level*(2**scale)
     return (U)
 
 # Testing with random matrix.
 def test_nmf_iter(n,m,k,p,binary=False):
     U = fix_barrier(gen_rand_factor(n,k,p,binary),p)
     V = nd.transpose(fix_barrier(gen_rand_factor(m,k,p,binary),p))
-    
+
     A = nd.dot(U,V)
     A = sp.csr_matrix(A,(n,n))
     (error,del_U,del_V) =  evaluate_gradients(A,U,V,p,100)
-    
+
     print("original evaluate score", error)
 
     hack_nmf_iter(A,k,p,100)
@@ -307,11 +307,11 @@ def k_types_test_nmf(n,m,k,dn,dm):
         for cnt  in xrange(0,dm):
             factor = r.randint(0,k-1)
             V[factor,i] = 1
-            
+
     A = sp.csr_matrix(nd.dot(U,V),(n,m))
-    
+
     (error,del_U,del_V) =  evaluate_gradients(A,U,V,0,A.nnz)
-    
+
     print("original evaluate score", error)
     p = .07
     (U1,V1) = hack_nmf_iter(A,2*k,p,100)
@@ -334,7 +334,7 @@ def inverse_map(the_mapping):
 # Print the highest valued movies in a movie
 # factor.
 def print_movie_factor(U,reverse_movie,i,to_print=20):
-    
+
     (n,k) = U.shape
 
     f = open("../data/movie_titles.txt")
@@ -355,7 +355,7 @@ def print_movie_factor(U,reverse_movie,i,to_print=20):
     for k in xrange(to_print):
         print ("%s, %0.2f" % (movie_id_to_title[s_pairs[k][0]], s_pairs[k][1]))
 
-        
+
 # Helper function for finding ith nonzero entry
 # in sparse matrix representation
 def find_index(array,val,left=0, right = False):
@@ -369,7 +369,7 @@ def find_index(array,val,left=0, right = False):
             return find_index(array,val,left=mid,right=right)
         else:
             return find_index(array,val,left=left,right=mid)
-        
+
 
 # Main Evaulation loop.
 def driver_movie_data_test(train_filename,test_filename,k):
@@ -378,15 +378,15 @@ def driver_movie_data_test(train_filename,test_filename,k):
 
     # Do nnmf
     (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz)
-    
+
     # Read test data
     (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
     (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz)
 
     reverse_user = inverse_map(user_ids)
     reverse_movie = inverse_map(movie_ids)
-    
-    
+
+
     # Test on Ratings!
     outfile = open("test.predictions","w")
     print ("Doing %d test ratings" % A.nnz)
@@ -395,15 +395,15 @@ def driver_movie_data_test(train_filename,test_filename,k):
         for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
             col = A.indices[row_col_index]
             elt = A.data[row_col_index]
-            print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+            print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
 
     # Test on completely random pairs
     outfile = open("test.rndpairs.predictions","w")
     for n_pairs in xrange(1000):
         row = r.randint(0,n-1)
         col = r.randint(0,m)
-        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
-    
+        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+
     # Test on difficult distribution that ephasizes non-rated pairs where movies and users
     # are chosen based on rating count.
     outfile = open("test.hard.rndpairs.predictions","w")
@@ -421,7 +421,7 @@ def driver_movie_data_test(train_filename,test_filename,k):
         #print "shape,row,col", A.shape,row,col
         # if (A[row][col] > 0):
         #     continue
-        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
 
 
     print ("test rsme", math.sqrt(error))
@@ -456,7 +456,7 @@ def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
         if fields[0] == 'total':
             continue
         movie_tots[fields[0]] = float(fields[1])
-        
+
     for line in user_file:
         fields = line.strip().split()
         if fields[0] == 'total':
@@ -467,7 +467,7 @@ def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
             for movie in ratings_by_user[user_id]:
                 movie_count = movie_tots[movie]
                 ratings_by_user[user_id][movie] = movie_count*user_count/(total_users*total_movies)
-                
+
     outfile = open(outfile_name,"w")
 
     test_file = open(test_file_name)
@@ -488,7 +488,7 @@ def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
 
 (U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.100K.train.txt",
                                                           "../data/sample.100K.test.txt",5)
-                
+
 # Doing baseline tests on ratings.
 user_movie_pred("test.predictions",
                 outfile_name = 'baseline.ratings.predictions')
