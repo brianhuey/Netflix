@@ -36,7 +36,7 @@ def nmf(matrix, k):
     model.fit(A)
     W = model.fit_transform(A)
     H = model.components_
-    return W, H
+    print W.
 
 def rmse(training_set, W, H):
     training = training_set
