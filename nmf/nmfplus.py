@@ -154,11 +154,13 @@ def normalize_kind_of(X,p):
 
 def evaluate_gradients(A,U,V,p,p_sample_size):
     (n,m) = A.shape
-    mse = 0.0
+    data_mse = 0.0
+    rnd_mse = 0.0
     count = 0
     del_U = nd.zeros(U.shape)
     del_V = nd.zeros(V.shape)
     index_hash = {}
+    
     for row in xrange(n):
         for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
             col = A.indices[row_col_index]
@@ -174,7 +176,7 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
             del_V[:,col] -= U[row,:]*diff*(1.0*m/A.nnz)
                 
             # Compute Function.
-            mse += diff*diff
+            data_mse += diff*diff
 
             count+=1
 
@@ -192,10 +194,12 @@ def evaluate_gradients(A,U,V,p,p_sample_size):
         del_U[row,:] -= V[:,col]*diff*(n*1.0/p_sample_size)
         del_V[:,col] -= U[row,:]*diff*(m*1.0/p_sample_size)
 
-        mse += diff*diff
+        rnd_mse += diff*diff
         count+=1
         
-    return (mse/(1.0*count),del_U,del_V)
+    print ("rnd_mse ", rnd_mse/(1.0*count))
+    print ("data_mse ", data_mse/(1.0*count))
+    return ((data_mse+rnd_mse)/(1.0*count),del_U,del_V)
             
 iterations = 40
 step_size = .05
@@ -419,8 +423,8 @@ def driver_movie_data_test(train_filename,test_filename,k):
             print col, A.shape, "what is going on"
             continue
         #print "shape,row,col", A.shape,row,col
-        # if (A[row][col] > 0):
-        #     continue
+        #if (A[row][col] > 0):
+        # continue
         print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
 
 
@@ -442,7 +446,6 @@ def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
     overall_rate = (100480507/float(total_movies * total_users))
     movie_tots = {}
     ratings_by_user = {}
-
 
     for line in test_file:
         fields = line.strip().split(",")
@@ -486,17 +489,103 @@ def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
 #driver_movie_data("../data_sample/data_set_sample.txt",10)
 #driver_movie_data("../data/sample.100K.txt",5)
 
-(U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.100K.train.txt",
-                                                          "../data/sample.100K.test.txt",5)
-                
-# Doing baseline tests on ratings.
-user_movie_pred("test.predictions",
-                outfile_name = 'baseline.ratings.predictions')
+# (U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.100K.train.txt",
+#                                                           "../data/sample.100K.test.txt",5)
 
-# Doing baseline tests on random pairs.
-user_movie_pred("test.rndpairs.predictions",
-                outfile_name = "baseline.rndpairs.predictions")
+import numpy as np
 
-# Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
-user_movie_pred("test.hard.rndpairs.predictions",
-                outfile_name = "baseline.hard.rndpairs.predictions")
+from sklearn.decomposition import ProjectedGradientNMF
+#from sklearn.decomposition import ProjectedGradientNMF
+
+def driver_movie_data_test_sklearn(train_filename,test_filename,k):
+
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
+
+    # Do nnmf
+    #(U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz)
+
+    model = ProjectedGradientNMF(n_components=5)
+
+    model.fit(A)
+    V1 = model.components_
+    U1 = model.transform(A)
+    print A.shape
+    print U1.shape
+    print V1.shape
+    # Read test data
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
+    (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz)
+
+    reverse_user = inverse_map(user_ids)
+    reverse_movie = inverse_map(movie_ids)
+    
+    # Test on Ratings!
+    outfile = open("test.sklearn.predictions","w")
+    print ("Doing %d test ratings" % A.nnz)
+    (n,m) = A.shape
+    for row in xrange(n):
+        for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
+            col = A.indices[row_col_index]
+            elt = A.data[row_col_index]
+            print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+
+    # Test on completely random pairs
+    outfile = open("test.sklearn.rndpairs.predictions","w")
+    for n_pairs in xrange(1000):
+        row = r.randint(0,n-1)
+        col = r.randint(0,m)
+        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+    
+    # Test on difficult distribution that ephasizes non-rated pairs where movies and users
+    # are chosen based on rating count.
+    outfile = open("test.sklearn.hard.rndpairs.predictions","w")
+    for n_pairs in xrange(1000):
+        i = r.randint(0,A.nnz -1)
+        row = find_index(A.indptr,i)
+        j = r.randint(0,A.nnz -1)
+        col = A.indices[j]
+        if (row > A.shape[0]-1):
+            print row, A.shape, "what is going on"
+            continue
+        if (col > A.shape[1]-1):
+            print col, A.shape, "what is going on"
+            continue
+        #print "shape,row,col", A.shape,row,col
+        # if (A[row][col] > 0):
+        #    continue
+        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col])) 
+
+
+    print ("test rsme", math.sqrt(error))
+    for i in xrange(k):
+        print ("Factor:", i)
+        print_movie_factor(U1,reverse_movie, i)
+    return(U1,V1,reverse_movie,reverse_user)
+
+
+def test_basic():
+    (U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.1M.train.txt",
+                                                           "../data/sample.1M.test.txt",5)
+    # Doing baseline tests on ratings.
+    user_movie_pred("test.predictions",
+                    outfile_name = 'baseline.ratings.predictions')
+    # Doing baseline tests on random pairs.
+    user_movie_pred("test.rndpairs.predictions",
+                    outfile_name = "baseline.rndpairs.predictions")
+    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
+    user_movie_pred("test.hard.rndpairs.predictions",
+                    outfile_name = "baseline.hard.rndpairs.predictions")
+
+def test_sklearn():
+    (U,V,reverse_movie,reverse_user) = driver_movie_data_test_sklearn("../data/sample.100K.train.txt",
+                                                                      "../data/sample.100K.test.txt",5)
+    # Doing baseline tests on ratings.
+    user_movie_pred("test.sklearn.predictions",
+                    outfile_name = 'baseline.sklearn.ratings.predictions')
+    # Doing baseline tests on random pairs.
+    user_movie_pred("test.sklearn.rndpairs.predictions",
+                    outfile_name = "baseline.sklearn.rndpairs.predictions")
+    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
+    user_movie_pred("test.sklearn.hard.rndpairs.predictions",
+                    outfile_name = "baseline.sklearn.hard.rndpairs.predictions")
+
