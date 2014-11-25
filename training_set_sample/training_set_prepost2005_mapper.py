@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import sys
 import random
-""" Splits training_set.txt in to pre and post 2005 """
+""" Splits training_set.txt in to pre and post 2005, use
+    org.apache.hadoop.mapred.lib.IdentityReducer for the
+    reducer """
 
 
 for line in sys.stdin:
