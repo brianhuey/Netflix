@@ -399,14 +399,14 @@ def driver_movie_data_test(train_filename,test_filename,k):
         for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
             col = A.indices[row_col_index]
             elt = A.data[row_col_index]
-            print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+            print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
 
     # Test on completely random pairs
     outfile = open("test.rndpairs.predictions","w")
     for n_pairs in xrange(1000):
         row = r.randint(0,n-1)
         col = r.randint(0,m)
-        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+        print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
 
     # Test on difficult distribution that ephasizes non-rated pairs where movies and users
     # are chosen based on rating count.
@@ -425,7 +425,7 @@ def driver_movie_data_test(train_filename,test_filename,k):
         #print "shape,row,col", A.shape,row,col
         # if (A[row][col] > 0):
         #     continue
-        print >> outfile, "%s,%s,%0.2f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+        print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
 
 
     print ("test rsme", math.sqrt(error))
