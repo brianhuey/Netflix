@@ -1,0 +1,20 @@
+import pandas as pd
+import csv
+import matplotlib.pyplot as plt
+
+a_list = []
+b_list = []
+
+a = csv.reader(open("test.predictions"))
+hist_ready_a = np.array(a_list.extend(a[,3]))
+a_n, a_bins, a_patches = plt.hst(hist_ready_a, 50, normed=1)
+
+
+
+
+b = csv.reader(open("test.rndpairs.predictions"))
+
+
+
+
+
