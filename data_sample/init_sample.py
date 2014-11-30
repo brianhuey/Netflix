@@ -4,10 +4,10 @@ import glob
 
 count = 0
 
-limit = 1000
+limit = 10000
 sample = []
 
-fnames = glob.glob("training_set_w_mid/*.txt")
+fnames = glob.glob("./data_sample/by_month_dir/2004-11.txt")
 
 for fname in fnames:
     file = open(fname)
