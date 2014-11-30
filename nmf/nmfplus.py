@@ -89,9 +89,6 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
     return((sp.csr_matrix((values,(row,column)),shape=(n_movies,n_users)),
             movie_ids,user_ids,n_movies,n_users))
 
-
-
-
 min_scale = .1
 
 #  This code does gram-schmidt orthogonalization,
@@ -155,7 +152,7 @@ def normalize_kind_of(X,p):
 
 
 
-def evaluate_gradients(A,U,V,p,p_sample_size,hard=False):
+def evaluate_gradients(A,U,V,p,p_sample_size):
     (n,m) = A.shape
     data_mse = 0.0
     rnd_mse = 0.0
@@ -182,20 +179,13 @@ def evaluate_gradients(A,U,V,p,p_sample_size,hard=False):
             data_mse += diff*diff
 
             count+=1
-    data_count = count
 
     # Make random unrated pairs have 0's to make sure
     # we don't stupidly output all
     # ones matrix.
     for i in xrange(p_sample_size):
         row = r.randint(0,n-1)
-        col = r.randint(0,m-1)        
-        if hard:
-            i = r.randint(0,A.nnz -1)
-            row = find_index(A.indptr,i)
-            j = r.randint(0,A.nnz -1)
-            col = A.indices[j]
-
+        col = r.randint(0,m-1)
         if (row,col) in index_hash:
             continue
 
@@ -207,16 +197,16 @@ def evaluate_gradients(A,U,V,p,p_sample_size,hard=False):
         rnd_mse += diff*diff
         count+=1
         
-    print ("rnd rmse ", math.sqrt(rnd_mse/(1.0*(count-data_count))))
-    print ("data rmse ", math.sqrt(data_mse/(1.0*data_count)))
+    print ("rnd_mse ", rnd_mse/(1.0*count))
+    print ("data_mse ", data_mse/(1.0*count))
     return ((data_mse+rnd_mse)/(1.0*count),del_U,del_V)
             
-iterations = 100
-step_size = .005
+iterations = 40
+step_size = .05
 
 # Main Procedure: iteratively run gradient descent
 #  method.
-def hack_nmf_iter(A,k,p,p_sample_size,hard=False):
+def hack_nmf_iter(A,k,p,p_sample_size):
     (n,m) = A.shape
     U = nd.transpose(init_vecs(A,k,left=False))
     V = init_vecs(nd.transpose(A),k,left= False)
@@ -231,7 +221,7 @@ def hack_nmf_iter(A,k,p,p_sample_size,hard=False):
     for i in xrange(0,iterations):
 
         #Compute Gradients (and function.)
-        (error,del_U,del_V) =  evaluate_gradients(A,U,V,p,p_sample_size,hard)
+        (error,del_U,del_V) =  evaluate_gradients(A,U,V,p,p_sample_size)
         print("rmse", math.sqrt(error), i)
 
         # do Step for U
@@ -386,16 +376,16 @@ def find_index(array,val,left=0, right = False):
 
 
 # Main Evaulation loop.
-def driver_movie_data_test(train_filename,test_filename,k,hard=False):
+def driver_movie_data_test(train_filename,test_filename,k):
 
     (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
 
     # Do nnmf
-    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz,hard)
+    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz)
 
     # Read test data
     (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
-    (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz,hard)
+    (error,del_U,del_V) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz)
 
     reverse_user = inverse_map(user_ids)
     reverse_movie = inverse_map(movie_ids)
