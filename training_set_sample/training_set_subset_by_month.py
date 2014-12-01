@@ -17,3 +17,5 @@ for line in sys.stdin:
         index = int(date_str)-1
         final_line = line.strip() + str('\n')
         files[index].write(final_line)
+for i in files:
+    files[i].close()
