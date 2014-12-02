@@ -2,7 +2,7 @@
 import random
 import numpy as np
 import scipy.sparse as sp
-
+import math
 
 # Helper function for finding ith nonzero entry
 # in sparse matrix representation
@@ -60,13 +60,16 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
             movie_ids,user_ids,n_movies,n_users))
 
 #    (B,movie_seeds) = make_sparse_rand_vectors(n_clusters,dim)
-def make_sparse_rand_vectors(n_clusters,m,dim):
+def make_sparse_rand_vectors(n_clusters,m,dim,hard_count = 0, A=False):
     B = np.zeros((m,dim))
 
     movie_seeds = []
     
     for i in xrange(n_clusters):
         row = random.randint(0,m-1)
+        if (i < hard_count):
+            j = random.randint(0,A.nnz-1)
+            row = find_index(A.indptr,j)
         movie_seeds.append(row)
         for j in xrange(dim):
             B[row,j] = -1.0 + 2.0*random.randint(0,1)
@@ -87,14 +90,15 @@ def predict_with_cluster(user,movie,At,graph):
     #print At.shape
     #print user,movie
     for row_col_index in xrange(At.indptr[user],At.indptr[user+1]):
-        rated_movie = At.data[row_col_index]
+        rated_movie = At.indices[row_col_index]
+        #print "row_col_index", row_col_index
         rated_movie_neighbors = graph.getrow(rated_movie)
         #print rated_movie_neighbors
         score = rated_movie_neighbors.dot(movie_neighbors)[0,0]
-        print "score", score
-        print rated_movie,movie
-        print rated_movie_neighbors
-        print movie_neighbors
+        # print "score", score
+        # print rated_movie,movie
+        # print rated_movie_neighbors
+        # print movie_neighbors
 
         val += score
         #print "val", val
@@ -108,9 +112,11 @@ def inverse_map(the_mapping):
     return reverse_mapping
 
 
-
 def spnorm(a):
     return np.sqrt(((a.data**2).sum()))
+
+def degree_in(A,m):
+    return (A.indptr[m+1]-A.indptr[m])
 
 def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
     outfile = open(dir_prefix+"test.predictions","w")
@@ -123,7 +129,8 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
     n_samples = 4000
     
     n_clusters = 200
-    n_rounds = 3
+    hard_count = 100
+    n_rounds = 5
     graph = sp.lil_matrix((m_count,m_count))
     degree = 2
     dim = 30
@@ -132,7 +139,7 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
 
 
     for rnd in xrange(n_rounds):
-        (B,movie_seeds) = make_sparse_rand_vectors(n_clusters,m_count,dim)
+        (B,movie_seeds) = make_sparse_rand_vectors(n_clusters,m_count,dim,hard_count=hard_count,A=A)
 
         seed_indices = {}
         for i in xrange(len(movie_seeds)):
@@ -146,7 +153,7 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
             best_so_far = []
             for m in movie_seeds:
                 v = B[m,]
-                val = np.dot(H[c,],B[m,])
+                val = np.dot(H[c,],B[m,])/(math.sqrt(math.sqrt(degree_in(A,m)*1.0)))
                 if len(best_so_far) < degree:
                     #if (val > np.dot(B[m,],B[m,])):
                     if (val > 0):
