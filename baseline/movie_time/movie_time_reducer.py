@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, datetime
+import sys, datetime, math
 """ Create dictionary with movie as a key, sort by date and
     calculate the time since the movie was last rated"""
 movie_dic = {}
@@ -11,7 +11,6 @@ for line in sys.stdin:
     else:
         date = datetime.datetime.strptime(date, '%Y-%m-%d')
         movie_dic[movie] = [[user, rating, date]]
-
 for key in movie_dic:
     # sort by date index
     datelist = sorted(movie_dic[key], key=lambda x: x[2])
@@ -25,4 +24,4 @@ for key in movie_dic:
         else:
             # calculate the timedelta, use .days attribute to get days
             timesince = (datelist[i][2] - datelist[i-1][2])
-            print '%s\t%s\t%s\t%s\t%s' % (key, userid, rating, date, timesince.days)
+            print '%s\t%s\t%s\t%s\t%s' % (key, userid, rating, date, math.sqrt(timesince.days))
