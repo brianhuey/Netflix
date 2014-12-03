@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+import sys, math
+""" Create dictionary with movie as a key, sort by date and
+    calculate the time since the movie was last rated"""
+current_movie = None
+theta_list = []
+count = 0
+total_movies = 17750 # Calculated
+total_users = 480189 # Calculated
+overall_rate = (100480507/float(total_movies * total_users))
+for line in sys.stdin:
+    movie, user, rating, date, movie_avg, user_avg, movie_time, user_time = line.strip().split("\t", 7)
+    residual = overall_rate - float(movie_avg) - float(user_avg)
+    # This executes if we haven't reached a different movieid
+    if current_movie == movie:
+        if float(movie_time) == 0:
+            theta = 0
+        else:
+            theta = (residual*float(movie_time))/float(movie_time)**2
+        theta_list.append(theta)
+        count += 1
+    else:
+        # This executes if we reach a new movieid
+        if current_movie:
+            total = 0
+            for i in range(0, len(theta_list)):
+                total += theta_list[i]
+            print '%s\t%s\t%s' % (current_movie, total, count)
+        if float(movie_time) == 0:
+            theta = 0
+        else:
+            theta = (residual*float(movie_time))/float(movie_time)**2
+        # This executes only on the first line of the input
+        theta_list = [theta]
+        count = 1
+        current_movie = movie
+# This executes after the last line, in the event a print didn't happen.
+if movie == current_movie:
+    total = 0
+    for i in range(0, len(theta_list)):
+        total += theta_list[i]
+    print '%s\t%s\t%s' % (current_movie, total, count)

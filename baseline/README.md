@@ -8,4 +8,12 @@ http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 <br>/movie_time - square root of time since movie was last rated
 <br>/user_total - probability of rating for a given userid (total number ratings by a user/total number of users)
 <br>/user_time - square root of time since user last rated a movie
-<br>/joins - MapReduce joins. Takes training data and sequentially appends movie_total, user_total, movie_time and user_time.
+<br>/joins - MapReduce joins. Takes training data and sequentially appends movie_total, user_total
+<br>/total - calculates total ratings for validation purposes
+
+The workflow is as follows:
+1) movie_total and user_total used to generate movie_averages.txt and user_averages.txt
+2) training data, user_averages.txt, movie_averages.txt are inputs to the mapper and reducer in /joins
+3) /joins is an input to /movie_time
+4) /movie_time is an input to /user_time
+5) /user_time is an input to time_coefficients which generates movie_coeff.txt and user_coeff.txt
