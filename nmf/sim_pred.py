@@ -4,6 +4,33 @@ import numpy as np
 import scipy.sparse as sp
 import math
 
+def predict_with_cluster(user,movie,At,A):
+    if ((user >= At.shape[0]) or (movie >= At.shape[1])):
+        return(0.0,0.0)
+    
+    (n_movies,n_users) = At.shape
+    
+    movie_neighbors = A.getrow(movie).transpose()
+    val = 0
+    #     print At.shape
+    #     print user,movie
+    for row_col_index in xrange(At.indptr[user],At.indptr[user+1]):
+        rated_movie = At.indices[row_col_index]
+
+        rated_movie_neighbors = A.getrow(rated_movie)
+
+        score = rated_movie_neighbors.dot(movie_neighbors)[0,0]
+        #         print "score", score
+        #         print rated_movie,movie
+        #         print rated_movie_neighbors
+        #         print "movie_neighbors"
+        #         print movie_neighbors
+
+        val += score
+        #print "val", val
+        
+    return (val,At.indptr[user+1]-At.indptr[user])
+
 # Helper function for finding ith nonzero entry
 # in sparse matrix representation
 def find_index(array,val,left=0, right = False):
@@ -59,64 +86,11 @@ def read_data(filename,movie_ids={},user_ids={},n_movies=0,n_users=0,discard =Fa
     return((sp.csr_matrix((values,(row,column)),shape=(n_movies,n_users)),
             movie_ids,user_ids,n_movies,n_users))
 
-#    (B,movie_seeds) = make_sparse_rand_vectors(n_clusters,dim)
-def make_sparse_rand_vectors(n_clusters,m,dim,hard_count = 0, A=False):
-    B = np.zeros((m,dim))
-
-    movie_seeds = []
-    
-    for i in xrange(n_clusters):
-        row = random.randint(0,m-1)
-        if (i < hard_count):
-            j = random.randint(0,A.nnz-1)
-            row = find_index(A.indptr,j)
-        movie_seeds.append(row)
-        for j in xrange(dim):
-            B[row,j] = -1.0 + 2.0*random.randint(0,1)
-
-    print("movie_seeds", movie_seeds)
-        
-    return (B,movie_seeds)
-
-def predict_with_cluster(user,movie,At,graph):
-    if ((user >= At.shape[0]) or (movie >= At.shape[1])):
-        return(0.0,0.0)
-    
-    (n_movies,n_users) = At.shape
-    
-    movie_neighbors = graph.getrow(movie).transpose()
-    #print movie_neighbors
-    val = 0
-    #print At.shape
-    #print user,movie
-    for row_col_index in xrange(At.indptr[user],At.indptr[user+1]):
-        rated_movie = At.indices[row_col_index]
-        #print "row_col_index", row_col_index
-        rated_movie_neighbors = graph.getrow(rated_movie)
-        #print rated_movie_neighbors
-        score = rated_movie_neighbors.dot(movie_neighbors)[0,0]
-        # print "score", score
-        # print rated_movie,movie
-        # print rated_movie_neighbors
-        # print movie_neighbors
-
-        val += score
-        #print "val", val
-        
-    return (val,At.indptr[user+1]-At.indptr[user])
-
 def inverse_map(the_mapping):
     reverse_mapping = {}
     for key in the_mapping.keys():
         reverse_mapping[the_mapping[key]] = key
     return reverse_mapping
-
-
-def spnorm(a):
-    return np.sqrt(((a.data**2).sum()))
-
-def degree_in(A,m):
-    return (A.indptr[m+1]-A.indptr[m])
 
 def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
     outfile = open(dir_prefix+"test.predictions","w")
@@ -128,63 +102,10 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
     At = A.transpose()
     n_samples = 4000
     
-    n_clusters = 200
-    hard_count = 100
-    n_rounds = 5
-    graph = sp.lil_matrix((m_count,m_count))
-    degree = 2
-    dim = 30
-    iterations = 1
-    counts = [0 for x in xrange(n_clusters)]
-
-
-    for rnd in xrange(n_rounds):
-        (B,movie_seeds) = make_sparse_rand_vectors(n_clusters,m_count,dim,hard_count=hard_count,A=A)
-
-        seed_indices = {}
-        for i in xrange(len(movie_seeds)):
-            seed_indices[movie_seeds[i]] = i
-
-        H = B
-        for i in xrange(iterations):
-            H = A.dot(At.dot(H))
-
-        for c in xrange(m_count):
-            best_so_far = []
-            for m in movie_seeds:
-                v = B[m,]
-                val = np.dot(H[c,],B[m,])/(math.sqrt(math.sqrt(degree_in(A,m)*1.0)))
-                if len(best_so_far) < degree:
-                    #if (val > np.dot(B[m,],B[m,])):
-                    if (val > 0):
-                        best_so_far.append((val,m))
-                else:
-                    m_now = m
-                    for i in xrange(degree):
-                        if val > best_so_far[i][0]:
-                            t_val = val
-                            t_m_now = m_now
-                            (val,m_now) = best_so_far[i]
-                            best_so_far[i] = (t_val,t_m_now)
-
-            #print ("movie, vals", c,best_so_far)
-
-            for (val,m) in best_so_far:
-                # print ("c,m,val", c,m, val)
-                graph[c,m] =  1.0 # val
-                counts[seed_indices[m]]+=1
-
-        print "counts",counts
-
-    n_smaples = 10000
-    graph = graph.tocsr()
-    print "graph", graph.shape,graph.nnz,spnorm(graph)
-
     trainA = A
     train_m_count = m_count
     train_u_count = u_count
     At = At.tocsr()
-
 
     (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
     
@@ -210,7 +131,7 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
         i = random.randint(0,A.nnz -1)
         row = find_index(A.indptr,i)            
         col = A.indices[i]
-        (val1,deg) = predict_with_cluster(col,row,At,graph)
+        (val1,deg) = predict_with_cluster(col,row,At,A)
         cnt+=1
         if (cnt%print_int == 0):
             print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
@@ -224,7 +145,7 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
     for n_pairs in xrange(n_samples):
         row = random.randint(0,n-1)
         col = random.randint(0,m-1)
-        (val1,deg) = predict_with_cluster(col,row,At,graph)
+        (val1,deg) = predict_with_cluster(col,row,At,A)
         cnt+=1
         if (cnt%print_int == 0):
             print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
@@ -246,7 +167,7 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
         if (col > A.shape[1]-1):
             print col, A.shape, "what is going on"
             continue
-        (val1,deg) = predict_with_cluster(col,row,At,graph)
+        (val1,deg) = predict_with_cluster(col,row,At,A)
 
         if (A[row,col] > 0 or trainA[row,col] > 0):
             continue
@@ -254,4 +175,5 @@ def cluster_prediction(filename,test_filename,dir_prefix="./cluster"):
         if (cnt%print_int == 0):
             print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
         print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1,deg)
+
 
