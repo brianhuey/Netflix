@@ -25,7 +25,7 @@ for line in sys.stdin:
                     print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, movie_time, 0)
                 else:
                     # calculate the timedelta, use .days attribute to get days
-                    timesince = (datelist[i][2] - datelist[i-1][2])
+                    timesince = (datelist[i][2] - datelist[0][2])
                     print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, movie_time, math.sqrt(timesince.days))
         date = datetime.datetime.strptime(date, '%Y-%m-%d')
         user_list = [[movie, rating, date, movie_avg, user_avg, movie_time]]
@@ -44,5 +44,5 @@ if user == current_user:
             print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, movie_time, 0)
         else:
             # calculate the timedelta, use .days attribute to get days
-            timesince = (datelist[i][2] - datelist[i-1][2])
+            timesince = (datelist[i][2] - datelist[0][2])
             print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, movie_time, math.sqrt(timesince.days))

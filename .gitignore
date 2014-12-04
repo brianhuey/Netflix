@@ -1,5 +1,6 @@
 RT_mapper/RT_movie_titles.txt
 .*
+/make_predictions/pre2005/*
 /baseline/user_total/*.txt
 /baseline/movie_total/*.txt
 /make_predictions/*.txt

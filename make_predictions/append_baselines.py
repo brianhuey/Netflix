@@ -5,14 +5,14 @@ import sys, csv, math
 # Load movie averages
 movie_dic = {}
 with open('movie_averages.txt', "rb") as csvfile:
-    reader = csv.reader(csvfile, delimiter = '\t')
+    reader = csv.reader(csvfile, delimiter = ',')
     for row in reader:
         movie_avg = float(row[1])
         movie_dic[row[0]] = movie_avg
 # Load user averages
 user_dic = {}
 with open('user_averages.txt', "rb") as csvfile:
-    reader = csv.reader(csvfile, delimiter = '\t')
+    reader = csv.reader(csvfile, delimiter = ',')
     for row in reader:
         user_avg = float(row[1])
         user_dic[row[0]] = user_avg
@@ -35,8 +35,7 @@ with open('user_coefficients.txt', "rb") as csvfile:
         N = int(row[2])
         user_time_dic[row[0]] = (theta*N)/float(N+alpha)
 
-def make_prediction(user, movie):
-    population_rate = (100480507/float(480189*17750))
+def append_baseline(movie, user):
     if user not in user_dic:
         user_adjusted_rate = 0
         user_time_adjusted_rate = 0
@@ -49,21 +48,9 @@ def make_prediction(user, movie):
     else:
         movie_adjusted_rate = movie_dic[movie]
         movie_time_adjusted_rate = movie_time_dic[movie]
-    # prediction can be changed to include or exclude user/movie rates
-    prediction = (population_rate + user_adjusted_rate + movie_adjusted_rate +
-        user_time_adjusted_rate + movie_time_adjusted_rate)
-    if prediction < 0:
-        prediction = 0
-    return prediction
-# global_effects is generated from the baseline/movie_total and user_total code
-RMSE = 0
-count = 0
+    print '%s\t%s\t%s\t%s\t%s\t%s' % (movie, user, movie_adjusted_rate, movie_time_adjusted_rate,
+        user_adjusted_rate, user_time_adjusted_rate)
+
 for line in sys.stdin:
-    user, movie, answer = line.strip().split(',', 2)
-    prediction = make_prediction(user, movie)
-    if int(answer) > 0:
-        answer = 1
-    RMSE += (int(answer) - prediction)**2
-    count += 1
-    print '%s\t%s\t%s\t%s' % (user, movie, answer, prediction)
-print math.sqrt(RMSE/float(count))
+    movie, user = line.strip().split(',', 1)
+    append_baseline(movie, user)
