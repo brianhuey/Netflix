@@ -1,0 +1,27 @@
+    for row in xrange(min(n_samples,A.nnz)):
+        i = random.randint(0,A.nnz -1)
+        row = find_index(A.indptr,i)            
+        col = A.indices[i]
+        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1, deg)
+
+    print ("Doing random difficult pairs")
+    outfile = open(dir_prefix+"test.hard.rndpairs.predictions","w")
+    for n_pairs in xrange(n_samples):
+        i = random.randint(0,A.nnz -1)
+        row = find_index(A.indptr,i)
+        j = random.randint(0,A.nnz -1)
+        col = A.indices[j]
+        if (row > A.shape[0]-1):
+            print row, A.shape, "what is going on"
+            continue
+        if (col > A.shape[1]-1):
+            print col, A.shape, "what is going on"
+            continue
+        (val1,deg) = predict_with_similarity(col,row,At,trainA,cosine_sim)
+
+        if (A[row,col] > 0 or trainA[row,col] > 0):
+            continue
+        cnt+=1
+        if (cnt%print_int == 0):
+            print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
+        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1,deg)

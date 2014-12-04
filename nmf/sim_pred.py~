@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 import math
 
-def predict_with_similarity(user,movie,At,A,cosine_sim=False):
+def predict_with_cluster(user,movie,At,A,cosine_sim=False):
     if ((user >= At.shape[0]) or (movie >= At.shape[1])):
         return(0.0,0.0)
     
@@ -97,7 +97,7 @@ def inverse_map(the_mapping):
         reverse_mapping[the_mapping[key]] = key
     return reverse_mapping
 
-def similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cosine_sim=False, sample_a = False, sample_b = False):
+def cluster_prediction(filename,test_filename,dir_prefix="./cluster.", cosine_sim=False):
 
     outfile = open(dir_prefix+"test.predictions","w")
 
@@ -126,42 +126,39 @@ def similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cos
     #     for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
     #         col = A.indices[row_col_index]
     #         elt = A.data[row_col_index]
-    #         (val1,val2) = predict_with_similarity(col,row,At,graph)
+    #         (val1,val2) = predict_with_cluster(col,row,At,graph)
     #         cnt+=1
     #         if (cnt%print_int== 0):
     #             print "cnt,movie,user,val1", cnt, row,col,val1
     #         print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], val1)
 
     print_int = 100
-
     for row in xrange(min(n_samples,A.nnz)):
         i = random.randint(0,A.nnz -1)
         row = find_index(A.indptr,i)            
         col = A.indices[i]
-            
-        (val1,deg) = predict_with_similarity(col,row,At,trainA,cosine_sim)
+        (val1,deg) = predict_with_cluster(col,row,At,trainA,cosine_sim)
         cnt+=1
         if (cnt%print_int == 0):
-            print "cnt,movie,user,deg,val1", cnt, row, col, deg, val1
-        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1, deg)
-            
+            print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
+        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1,deg)
         
     outfile.close()
 
-#     # Test on completely random pairs
-#     print ("Doing random pairs")
-#     print_int = 100
-#     outfile = open(dir_prefix + "test.rndpairs.predictions","w")
-#     for n_pairs in xrange(n_samples):
-#         row = random.randint(0,n-1)
-#         col = random.randint(0,m-1)
-#         (val1,deg) = predict_with_similarity(col,row,At,trainA,cosine_sim)
-#         cnt+=1
-#         if (cnt%print_int == 0):
-#             print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
-#         print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1,deg)
+    # Test on completely random pairs
+    print ("Doing random pairs")
+    print_int = 100
+    outfile = open(dir_prefix + "test.rndpairs.predictions","w")
+    for n_pairs in xrange(n_samples):
+        row = random.randint(0,n-1)
+        col = random.randint(0,m-1)
+        (val1,deg) = predict_with_cluster(col,row,At,trainA,cosine_sim)
+        cnt+=1
+        if (cnt%print_int == 0):
+            print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
+        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[row],reverse_user[col], val1,deg)
 
-#     outfile.close()
+    outfile.close()
 
     # Test on difficult distribution that ephasizes non-rated pairs where movies and users
     # are chosen based on rating count.
@@ -178,7 +175,7 @@ def similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cos
         if (col > A.shape[1]-1):
             print col, A.shape, "what is going on"
             continue
-        (val1,deg) = predict_with_similarity(col,row,At,trainA,cosine_sim)
+        (val1,deg) = predict_with_cluster(col,row,At,trainA,cosine_sim)
 
         if (A[row,col] > 0 or trainA[row,col] > 0):
             continue
@@ -190,7 +187,7 @@ def similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cos
 
     outfile.close()
 
-def final_similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cosine_sim=False):
+def final_cluster_prediction(filename,test_filename,dir_prefix="./cluster.", cosine_sim=False):
 
     outfile = open(dir_prefix+"test.predictions","w")
 
@@ -219,7 +216,7 @@ def final_similarity_prediction(filename,test_filename,dir_prefix="./similarity.
     #     for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
     #         col = A.indices[row_col_index]
     #         elt = A.data[row_col_index]
-    #         (val1,val2) = predict_with_similarity(col,row,At,graph)
+    #         (val1,val2) = predict_with_cluster(col,row,At,graph)
     #         cnt+=1
     #         if (cnt%print_int== 0):
     #             print "cnt,movie,user,val1", cnt, row,col,val1
@@ -229,54 +226,7 @@ def final_similarity_prediction(filename,test_filename,dir_prefix="./similarity.
     for i in xrange(A.nnz)):
         movie = find_index(A.indptr,i)            
         user = A.indices[i]
-        (val1,deg) = predict_with_similarity(user,movie,At,trainA,cosine_sim)
-        cnt+=1
-        if (cnt%print_int == 0):
-            print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
-        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[movie],reverse_user[user], val1,deg)
-        
-    outfile.close()
-
-def final_similarity_prediction(filename,test_filename,dir_prefix="./similarity.", cosine_sim=False):
-
-    outfile = open(dir_prefix+"test.predictions","w")
-
-    (A,movie_ids,user_ids,m_count,u_count) = read_data(filename)
-
-    reverse_user = inverse_map(user_ids)
-    reverse_movie = inverse_map(movie_ids)
-    At = A.transpose()
-    
-    
-    trainA = A
-    train_m_count = m_count
-    train_u_count = u_count
-    At = At.tocsr()
-
-    (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
-    
-    #outfile2 = open(dir_prefix+"test.predictions2","w")
-
-    print ("Total of %d test ratings" % A.nnz)
-    (n,m) = A.shape
-    cnt=0
-
-    # print_int = min(A.nnz/10,1000)
-    # for row in xrange(n):
-    #     for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
-    #         col = A.indices[row_col_index]
-    #         elt = A.data[row_col_index]
-    #         (val1,val2) = predict_with_similarity(col,row,At,graph)
-    #         cnt+=1
-    #         if (cnt%print_int== 0):
-    #             print "cnt,movie,user,val1", cnt, row,col,val1
-    #         print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], val1)
-
-    print_int = 100
-    for i in xrange(A.nnz)):
-        movie = find_index(A.indptr,i)            
-        user = A.indices[i]
-        (val1,deg) = predict_with_similarity(user,movie,At,trainA,cosine_sim)
+        (val1,deg) = predict_with_cluster(user,movie,At,trainA,cosine_sim)
         cnt+=1
         if (cnt%print_int == 0):
             print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
