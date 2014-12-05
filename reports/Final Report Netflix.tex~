@@ -1,0 +1,162 @@
+\documentclass[11pt]{article}
+\usepackage{verbatim}
+\usepackage[hyphens]{url}
+\usepackage{enumerate}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt plus 6pt minus 4pt}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\textwidth}{+1in}
+
+\title{Final Report; Netflix!}
+\author{ Brian Huey, Renee Rao }
+\date{December 5th 2014}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+We are working the Netflix dataset used in the 2007 KDD cup competition which provides information on characteristics of users of the Netflix video services who rated movies from the years 1998 to 2006. (http://www.kdd.org/kdd-cup-2007-consumer-recommendations)
+
+We need to predict which users rated which movies in 2006. To test this we use a provided set of roughly 100\,000 (user\_id\, movie\_id) pairs where the users and movies are drawn from the Netflix Prize training data set (where none of the pairs were rated in the training set.) Using this list we will try to predict the probability that each pair was rated in 2006 (i.e.the probability that user\_id rated movie\_id is in the 2006 set of ratings). It is important to note that the actual rating is irrelevant; we are only interested in whether the movie was rated by that user sometime in 2006. Our success at this task will be computed by looking at the root mean squared error (RMSE) between our predictions for each pairs and actual values for the pairs (which are 0 or 1 if the pair is unrated or rated respectively). 
+
+We are provided with a data set of roughly 200 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.
+
+We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of .27. The KDD cup winner had an RMSE score of .256.
+
+We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed below and reproduced on github. Using this metric we selected three features to input to our model.
+   
+\begin{enumerate}
+\item Non-Negative Matrix Factorization (NMF) 
+\item Global Effects of Time on User and Movie
+\item Cosine Similarity
+\end{enumerate}
+
+We then computed these features for our validation set using AWS MapReduce and an EC2 instance, and used the distribution of these features to create a bayesian transformation used to normalize the features values on the test set, before feeding them into a logistic regression model to make predictions and compute RMSE. 
+
+(PUT BEAUTIFUL GRAPHIC BELOW)
+https://www.sharelatex.com/blog/2013/08/29/tikz-series-pt3.html
+
+Our final result was an RMSE of .2667, which compares favorably with the basic prediction of all zeros but is significantly less than the winner of the 2007 competition. 
+
+A detailed description of our features, transformation, model processing, and data selection follows. 
+
+\section{The Data}
+
+In this project we viewed the data pre-2005 as training data and 2005 as validation data and preserved the 2006 answer set as the test set for use in a final evaluation. We noted that the test set for 2006 was sampled proportionally to counts for user ratings and movie ratings made in 2006, so we created our 2005 validation sets accordingly, splitting it into:
+
+\begin{itemize}
+\item a random subset rated user,movie pairs in 2005   
+\item popularity distributed random subset of unrated user, movie pairs from 2005 
+\end{itemize}
+	
+Doing so allowed us to better analyze feature utility by visualizing the difference of features between the two sets as well compute the probability pair was rated for given a range of feature values used in the transformation step for the final 2006 test set. 
+
+\section{Features}
+
+\subsection{Non-negative matrix factorization (NNMF)} 
+We use non-negative matrix factorization to develop user features and
+movie features to then predict ratings for the Netflix data set. To do
+this we estimate $A$, the matrix of movie and user ids, most of which
+is considered unknown, by decomposing it into a user matrix, V and a
+movie matrix, $U$ based on $K$ latent factors, such that $A \approx U
+x V = \overline{A}$.  Under this model each row of matrix U is
+considered a "movie factor"Äù and each column of the matrix V is
+considered a ``user factor''.  A prediction for a user-movie pair would
+mean computing the dot product of the user factor vector and the movie
+factor vector.
+
+{\bf Algorithm Outline.}
+Input: n by m matrix A, integer k
+Output:  n by k matrix U, k by m matrix V with nonnegative entries.
+
+{\bf Initialization}: Form initial matrix U (V) by choosing a random subset
+of the columns (rows) of A and averaging them, K times.
+We tune this so each element is expected to be added
+to some U, one time. This is a parameter that
+can be changed.
+
+{\bf Main Loop}:
+\begin{itemize}
+\item {\bf Gradient Descent:}
+We used gradient descent on the Mean Squared cost function for the difference
+between $A$ and $\bar{A} = U \times V$.  We compute the RMSE in each
+step
+
+\begin{itemize}
+
+\item summing MSE over non-zeros in A.
+\item and then summing over random pairs of movie-users to 
+ensure that $\bar{A}$ does not converge to all ones.
+
+\end{itemize}
+
+It would be prohibitive to sum over all non-zeros. 
+
+\item
+{\bf Nonnegativity:} We enforce positivity (which is certainly non-negative) 
+on the weights in the matrix
+factor by moving all weights away from zero if they
+get too close to zero, and making negative weights
+positive if the gradient pushes them to negative.
+
+\item {\bf Spread:} We also normalize the factors (using a Gram-Schmidt type
+         procedure to make sure all the factors don't simply repeat).
+         We again enforce positivity here by staying away from zero.
+
+\end{itemize}
+
+The distribution of the NMF feature on validation ratings and non-ratings is below: 
+
+\subsection{Global Effects}
+
+
+The distribution of the Cosine Similarity feature on validation ratings and non-ratings is below: 
+
+\subsection{Cosine Similarity}
+Computes for a given movie-user pair the number of users who rated at least one movie in common with the user, who also rated the movie in the pair, scaled by the magnitude of the two movie vectors. 
+
+The distribution of the Cosine Similarity feature on validation ratings and non-ratings is below: 
+
+
+
+\section{Division of Labor}
+{\bf Brian}
+
+\begin{enumerate}
+\item Join movie\_titles.txt to Rotten Tomatoes info 
+\item Set up and organized github
+\item Upload of data to sc3
+\item Calculate the average number of movies rated over all users in the training set (mapreduce).
+\item Calculate the average number of ratings over all movies in the training set (mapreduce).
+\item  Calculate the average number of movies rated for each user in the training set (mapreduce).
+\item  Calculate the average number of ratings for each movie in the training set (mapreduce).
+\item Researched K Nearest Neighbor algorithms.
+\item Alternate Baseline method.
+\end{enumerate}
+
+{\bf Renee:}
+
+\begin{enumerate}
+\item Created Validation Sets. 
+\item Wrote driver.py to go from features computed on validation and test set to predictions and RMSE
+\item Wrote Non-Negative Matrix Factorization Model and Cosine Similarity in Python.
+\item Evaluated feature worthiness.
+\item Generated associated figures for evaluation.
+\item Wrote reports. 
+\end{enumerate}
+
+
+
+
+
+
+
+\end{document}
+
+
+

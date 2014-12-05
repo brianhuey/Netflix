@@ -1,0 +1,62 @@
+import sys
+import os
+
+sys.path.append('../nmf/')
+sys.path.append('../classify/')
+
+from some_tools import *
+import transformation as trans
+
+all_feature_files = [["answer_features/cluster.features.w.degree",
+                      "validation_sets_features/setA.a.cluster.predictions",
+                      "validation_sets_features/setA.b.cluster.predictions",
+                      "validation_sets_features/setB.a.cluster.predictions",
+                      "validation_sets_features/setB.b.cluster.predictions"]]
+
+regression_info = ["validation_sets_features/setB.a","validation_sets_features/setB.b","KDD_2007_who_rated_what.txt",
+                   "this.is.outfile.name"]
+
+
+
+transformed_feature_files = []
+
+
+validation_feature_files = []
+answer_feature_files = []
+
+for feature_file_info in all_feature_files:
+    # Use distributions
+    pos_dist_file = feature_file_info[1]
+    neg_dist_file = feature_file_info[2]
+
+    # to transform features in these files
+    answer_set = feature_file_info[0]
+    pos_validation_file = feature_file_info[3]
+    neg_validation_file = feature_file_info[4]
+    
+    for fname in [answer_set,pos_validation_file,neg_validation_file]:
+        t.transform_features(fname,pos_dist_file,neg_dist_file, outfile_name =fname+".transformed")
+
+    validation_feature_fname = pos_dist_file + ".and.neg"
+        
+    cmd = "cat " + pos_validation_file +".transformed " + neg_validation_file + ".transformed > " + validation_feature_fname
+    answer_feature_files.append(answer_set+".transformed")
+    validation_feature_files.append(validation_feature_fname)
+    print "Issueing Cmd: ", cmd
+    
+    os.system(cmd)
+
+validation_answer_fname = "temp/validation.answers.txt"
+format_data(regression_info[0],regression_info[1],validation_answer_fname)
+
+
+model = log.train_logistic_model(validation_feature_files, validation_answer_fname) 
+
+outfile_name = regression_info[3]
+
+log.predict_logistic_model(model, regression_info[2],
+                           answer_feature_files, 
+                           outfile_name=outfile_name,
+                           correct_imbalance = .14)
+
+
