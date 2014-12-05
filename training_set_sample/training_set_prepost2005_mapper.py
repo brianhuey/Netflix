@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-import sys
-import random
+import sys, random
 """ Splits training_set.txt in to pre and post 2005, use
     org.apache.hadoop.mapred.lib.IdentityReducer for the
     reducer """
-
-
 for line in sys.stdin:
     # populate sample list with 100k obs
     movie, user, rating, date = line.strip().split(",",3)
