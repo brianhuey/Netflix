@@ -56,6 +56,14 @@ In this project we viewed the data pre-2005 as training data and 2005 as validat
 \end{itemize}
 	
 Doing so allowed us to better analyze feature utility by visualizing the difference of features between the two sets as well as to compute the probability the was rated for given feature values used in the transformation step for the final 2006 test set. 
+\subsubsection{Data Locations}
+\begin{itemize}
+\item Pre-2005 training set: s3://stat157-uq85def/shared/netflix/pre2005\_training\_join/
+\item Post-2005 validation set: s3://stat157-uq85def/shared/netflix/post2005\_training.txt
+\item Training set: s3://stat157-uq85def/shared/netflix/training\_set/training\_set\_reshape.txt
+\item Test set: s3://stat157-uq85def/shared/netflix/test\_sets/
+\item Answer set: s3://stat157-uq85def/shared/netflix/answer\_sets/
+\end{itemize}
 
 \section{Features}
 
@@ -116,7 +124,7 @@ The distribution of the NMF feature on validation ratings and non-ratings is bel
 \subsection{Global Effects}
 
 The global effect feature is an adjustment to the overall probability that a user/movie pair is rated in 2006, assuming no information (i.e. number of ratings in the training set divided by the total number of user/movie pair combinations), which is approximately 1.17\%. Beginning at the first step, we started with the overall probability and subtracted the first effect from it, creating a residual which was the input to the next step, repeating until all effects have been accounted for. This process is based on work described by Bell and Koren.\footnote{Bell, R., Koren, Y. ?Improved Neighborhood-based Collaborative Filtering? KDD Cup ?07, August 12, 2007, San Jose, CA.}
-\[global\_effect_{mu}=overall\_effect-avg_{m}-avg_{u}-time_{m}-time_{u}\]
+\[global\_effect_{mu}=overall\_avg-avg_{m}-avg_{u}-time_{m}-time_{u}\]
 Where \(u\) and \(m\) are user and movie, respectively.
 \subsubsection{User/Movie Averages}
 The user and movie averages were calculated for each unique user and movie id by taking the total number of observed ratings for that id and dividing it by the total number of possible ratings. For a given movie id, sum the total number of users rating that movie divided by the total number of users:
@@ -129,8 +137,15 @@ Where \(r_{ui}\) is the residual probability and \(x_{mu}\) is equal to the squa
 The final estimate of \(\theta\) is:
 \[\theta_{m}=\frac{\eta_{m}\hat{\theta}_{m}}{\eta_{m}+\alpha}\]
 Where \(\alpha\) is a tuned parameter.
+\subsubsection{Feature locations}
+\begin{itemize}
+\item User averages: s3://stat157-uq85def/home/sbhuey/outputs/user\_averages.txt
+\item Movie averages: s3://stat157-uq85def/home/sbhuey/outputs/movie\_averages.txt
+\item User coefficients: s3://stat157-uq85def/home/sbhuey/outputs/user\_coefficients.txt
+\item Movie coefficients: s3://stat157-uq85def/home/sbhuey/outputs/movie\_coefficients.txt
+\end{itemize}
 \subsection{Cosine Similarity}
-For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated.   
+For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated. 
 
 \section{Transformation and Logistic Regression}
 

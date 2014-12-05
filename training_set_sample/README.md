@@ -1,4 +1,5 @@
 Training Set Sample
+Author: Brian Huey
 ===============
 Various subseting and sampling of the training set.
 
