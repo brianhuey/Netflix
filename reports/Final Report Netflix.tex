@@ -25,9 +25,9 @@ We are working the Netflix dataset used in the 2007 KDD cup competition which pr
 
 We need to predict which users rated which movies in 2006. To test this we use a provided set of roughly 100\,000 (user\_id\, movie\_id) pairs where the users and movies are drawn from the Netflix Prize training data set (where none of the pairs were rated in the training set.) Using this list we will try to predict the probability that each pair was rated in 2006 (i.e.the probability that user\_id rated movie\_id is in the 2006 set of ratings). It is important to note that the actual rating is irrelevant; we are only interested in whether the movie was rated by that user sometime in 2006. Our success at this task will be computed by looking at the root mean squared error (RMSE) between our predictions for each pairs and actual values for the pairs (which are 0 or 1 if the pair is unrated or rated respectively). 
 
-We are provided with a data set of roughly 200 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.
+We are provided with a training data set of roughly 100.5 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.
 
-We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of .27. The KDD cup winner had an RMSE score of .256.
+We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of 0.27. The KDD cup winner had an RMSE score of 0.256.
 
 We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed below and reproduced on github. Using this metric we selected three features to input to our model.
    
@@ -44,11 +44,11 @@ https://www.sharelatex.com/blog/2013/08/29/tikz-series-pt3.html
 
 Our final result was an RMSE of .2667, which compares favorably with the basic prediction of all zeros but is significantly less than the winner of the 2007 competition. 
 
-A detailed description of our features, transformation, model processing, and data selection follows. 
+A detailed description of our data, features, transformation, model processing, and data selection follows. 
 
 \section{The Data}
 
-In this project we viewed the data pre-2005 as training data and 2005 as validation data and preserved the 2006 answer set as the test set for use in a final evaluation. We noted that the test set for 2006 was sampled proportionally to counts for user ratings and movie ratings made in 2006, so we created our 2005 validation sets accordingly, splitting them into:
+In this project we viewed the data pre-2005 as training data and 2005 as validation data and preserved the 2006 answer set as the test set for use in a final evaluation. This was done to avoid making predictions based on models or features that were calculated from data observed further in to the future than the validation data. We noted that the test set for 2006 was sampled proportionally to counts for user ratings and movie ratings made in 2006, so we created our 2005 validation sets accordingly, splitting them into:
 
 \begin{itemize}
 \item random subset of rated user,movie pairs in 2005   
@@ -115,13 +115,22 @@ The distribution of the NMF feature on validation ratings and non-ratings is bel
 
 \subsection{Global Effects}
 
-
-The distribution of the Cosine Similarity feature on validation ratings and non-ratings is below: 
-
+The global effect feature is an adjustment to the overall probability that a user/movie pair is rated in 2006, assuming no information (i.e. number of ratings in the training set divided by the total number of user/movie pair combinations), which is approximately 1.17\%. Beginning at the first step, we started with the overall probability and subtracted the first effect from it, creating a residual which was the input to the next step, repeating until all effects have been accounted for. This process is based on work described by Bell and Koren.\footnote{Bell, R., Koren, Y. ?Improved Neighborhood-based Collaborative Filtering? KDD Cup ?07, August 12, 2007, San Jose, CA.}
+\[global\_effect_{mu}=overall\_effect-avg_{m}-avg_{u}-time_{m}-time_{u}\]
+Where \(u\) and \(m\) are user and movie, respectively.
+\subsubsection{User/Movie Averages}
+The user and movie averages were calculated for each unique user and movie id by taking the total number of observed ratings for that id and dividing it by the total number of possible ratings. For a given movie id, sum the total number of users rating that movie divided by the total number of users:
+\[avg_{m} = \frac{\eta_{m}}{\sum_{u}x_{u}}\]
+Where \(\eta_{m}\) is the number of ratings that movie m received and x is identically 1.
+\subsubsection{Time Effects}
+The time effect was estimated from the date timestamp for each row of data. For a given movie or user, we measure the time in days since the first rating and take the square root of the number of days. The coefficient, \(\hat{\theta}\) was estimated by the following equation provided by Bell and Koren:
+\[\hat{\theta}_{m}=\frac{\sum_{u}r_{mu}x_{mu}}{\sum_{u}x_{mu}^{2}}\]
+Where \(r_{ui}\) is the residual probability and \(x_{mu}\) is equal to the square root of the number of days since the movie was first rated.
+The final estimate of \(\theta\) is:
+\[\theta_{m}=\frac{\eta_{m}\hat{\theta}_{m}}{\eta_{m}+\alpha}\]
+Where \(\alpha\) is a tuned parameter.
 \subsection{Cosine Similarity}
 For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated.   
-
-The distribution of the Cosine Similarity feature on validation ratings and non-ratings is below: 
 
 \section{Transformation and Logistic Regression}
 
@@ -168,11 +177,11 @@ Note: Authorship, comments and readme's for all code can be found on the github 
 \item Join movie\_titles.txt to Rotten Tomatoes info 
 \item Set up and organized github
 \item Upload of data to sc3
+\item Subset training data in to pre and post 2005 (map reduce).
 \item Calculate the average number of movies rated over all users in the training set (mapreduce).
 \item Calculate the average number of ratings over all movies in the training set (mapreduce).
-\item  Calculate the average number of movies rated for each user in the training set (mapreduce).
-\item  Calculate the average number of ratings for each movie in the training set (mapreduce).
-\item Researched K Nearest Neighbor algorithms.
+\item Calculate the average number of movies rated for each user in the training set (mapreduce).
+\item Calculate the average number of ratings for each movie in the training set (mapreduce).
 \item Alternate Baseline method.
 \end{enumerate}
 
@@ -180,7 +189,7 @@ Note: Authorship, comments and readme's for all code can be found on the github 
 
 \begin{enumerate}
 \item Created Validation Sets. 
-\item Wrote predict_with_features.py,  some_tools.py, logistic.py to go from features computed on validation and test set to predictions and RMSE
+\item Wrote predict\_with\_features.py,  some\_tools.py, logistic.py to go from features computed on validation and test set to predictions and RMSE
 \item Wrote Non-Negative Matrix Factorization Model and Cosine Similarity in Python.
 \item Evaluated feature worthiness.
 \item Generated associated figures for evaluation.
