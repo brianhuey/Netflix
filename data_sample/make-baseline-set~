@@ -1,2 +1,0 @@
-grep -v '-2005' data_set_sample.txt >  training_set_pre_2005.txt
-grep -v '-2005' data_set_sample.txt >  test_set_eq_2005.txt

@@ -1,6 +1,0 @@
-
-PR[A |d ] = Pr[d|A] Pr[A] / ( total prob d)
-
-total_prob = Pr[d|A] Pr[A] + Pr[d|B]Pr[B]
-
-B = not A
