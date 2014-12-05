@@ -13,6 +13,7 @@ http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 <br>/user_sqrt_time - square root of time since user first rated a movie
 <br>/user_center_time - centers the sqrt of time since user first rated around the mean for the user
 <br>/user_time_coefficients - produces the user time coefficient that estimates effect time has on rating probability
+<br>append_global_effect.py - loads the movie avg, user avg, movie time and user time coefficient files and appends the final calculation to a set.
 <br> Extra utilities:
 <br>/sqrt_time - extra sqrt time code, not used
 <br>/time_coefficient - extra time coefficient code, not used
@@ -27,3 +28,4 @@ http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 <br>5) /movie_center_time is an input to /user_sqrt_time
 <br>6) /user_sqrt_time is an input to /user_center_time
 <br>7) /user_center_time is an input to /movie_time_coefficient and /user_time_coefficient which generates movie_coeff.txt and user_coeff.txt respectively.
+<br>8) Run append_global_effect.py to attach the global affect feature to the validation/test set.
