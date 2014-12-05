@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import sys, math
-""" Input: Training set with global averages appended
-    Calculates the time since the movie was last rated
-    Output: sqrt(time last rated)"""
+""" Calculates the average and centers the movie sqrt(time) value around the mean
+    Output: Data input with centered sqrt(time last rated)"""
 current_movie = None
 movie_list = []
 total = 0
@@ -24,7 +23,8 @@ for line in sys.stdin:
                 user_avg = movie_list[j][5]
                 movie_time = float(movie_list[j][6])
                 centered_movie_time = movie_time - (total/count)
-                print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, centered_movie_time)
+                print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating,
+                    date, movie_avg, user_avg, centered_movie_time)
         movie_list = [[movie, user, rating, date, movie_avg, user_avg, movie_time]]
         count = 1
         total = 0
@@ -41,4 +41,5 @@ if movie == current_movie:
         user_avg = movie_list[j][5]
         movie_time = float(movie_list[j][6])
         centered_movie_time = movie_time - (total/count)
-        print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, centered_movie_time)
+        print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date,
+            movie_avg, user_avg, centered_movie_time)

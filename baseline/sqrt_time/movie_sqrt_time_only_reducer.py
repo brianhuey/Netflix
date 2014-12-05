@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import sys, datetime, math
-""" Input: Training set with global averages appended
-    Calculates the time since the movie was last rated
-    Output: sqrt(time last rated)"""
+""" Input: Training set with global averages appended, movie as key
+    Output: movie, date movie first rated"""
 current_movie = None
 movie_list = []
 for line in sys.stdin:

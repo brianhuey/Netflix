@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
-""" Subsets training set by month """
+""" Input: training set
+    Output: 12 training subsets, corresponding to month"""
 months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 # open files corresponding to each month
 files = [open('%s_training.txt' %s, 'w') for s in months]

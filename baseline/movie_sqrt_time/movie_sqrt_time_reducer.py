@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import sys, datetime, math
-""" Input: Training set with global averages appended
-    Calculates the time since the movie was last rated
-    Output: sqrt(time last rated)"""
+""" Calculates the time since the movie was first rated
+    Output: the data input plus sqrt(time first rated)"""
 current_movie = None
 movie_list = []
 for line in sys.stdin:
@@ -22,11 +21,13 @@ for line in sys.stdin:
                 # parse out timestamp reformat date back to original YYYY-MM-DD
                 date = datelist[i][2].isoformat()[0:10]
                 if i == 0:
-                    print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, 0)
+                    print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating,
+                        date, movie_avg, user_avg, 0)
                 else:
                     # calculate the timedelta, use .days attribute to get days
                     timesince = (datelist[i][2] - datelist[0][2])
-                    print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, math.sqrt(timesince.days))
+                    print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating,
+                        date, movie_avg, user_avg, math.sqrt(timesince.days))
         date = datetime.datetime.strptime(date, '%Y-%m-%d')
         movie_list = [[user,rating,date,movie_avg,user_avg]]
         current_movie = movie
@@ -41,8 +42,10 @@ if movie == current_movie:
         # reformat date back to original YYYY-MM-DD
         date = datelist[i][2].isoformat()[0:10]
         if i == 0:
-            print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, 0)
+            print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date,
+                movie_avg, user_avg, 0)
         else:
             # calculate the timedelta, use .days attribute to get days
             timesince = (datelist[i][2] - datelist[0][2])
-            print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date, movie_avg, user_avg, math.sqrt(timesince.days))
+            print '%s\t%s\t%s\t%s\t%s\t%s\t%s' % (current_movie, userid, rating, date,
+                movie_avg, user_avg, math.sqrt(timesince.days))
