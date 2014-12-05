@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-import sys, datetime, math
-""" Input: Training set with global averages appended and sqrt(movie_time)
-    Calculates the time since the user last rated movie
-    Output: sqrt(time last rated)"""
+import sys, math
+""" Calculates the average and centers the user sqrt(time) value around the mean
+    Output: Data input with centered sqrt(time last rated)"""
 current_user = None
 user_list = []
 total = 0
@@ -10,7 +9,8 @@ count = 0
 for line in sys.stdin:
     user, movie, rating, date, movie_avg, user_avg, centered_movie_time, user_time = line.strip().split("\t", 7)
     if current_user == user:
-        user_list.append([movie, user, rating, date, movie_avg, user_avg, centered_movie_time, user_time])
+        user_list.append([movie, user, rating, date, movie_avg, user_avg,
+            centered_movie_time, user_time])
         count += 1
     else:
         if current_user:
@@ -25,7 +25,8 @@ for line in sys.stdin:
                 centered_movie_time = user_list[j][6]
                 user_time = float(user_list[j][7])
                 centered_user_time = user_time - (total/count)
-                print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, centered_movie_time, centered_user_time)
+                print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating,
+                    date, movie_avg, user_avg, centered_movie_time, centered_user_time)
         user_list = [[movie, user, rating, date, movie_avg, user_avg, centered_movie_time, user_time]]
         count = 1
         total = 0
@@ -42,4 +43,5 @@ if user == current_user:
         centered_movie_time = user_list[j][6]
         user_time = float(user_list[j][7])
         centered_user_time = user_time - (total/count)
-        print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date, movie_avg, user_avg, centered_movie_time, centered_user_time)
+        print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (movieid, current_user, rating, date,
+            movie_avg, user_avg, centered_movie_time, centered_user_time)

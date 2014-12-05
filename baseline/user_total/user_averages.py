@@ -2,8 +2,7 @@
 import sys, math
 """ Calculates the user_id-specific global effect
     Input: user_total_fromAWS
-    Output: user_id, #ratings/moviess - overall average rating
-    """
+    Output: user_id, #ratings/moviess - overall average rating"""
 total_movies = 17750 # Calculated
 total_users = 480189 # Calculated
 overall_rate = (100480507/float(total_movies * total_users))

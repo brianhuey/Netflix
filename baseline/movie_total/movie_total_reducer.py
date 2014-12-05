@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys
-""" Create dictionary with average number of user ratings for each movie,
+""" Create dictionary with number of user ratings for each movie,
     and total number of ratings
     Input: training_set_reshape.txt
-    Output: moviex: number of user ratings, total: total number of user ratings"""
+    Output: number of ratings by movie, total: total number of user ratings"""
 
 movie_dic = {'total movies': 0}
 

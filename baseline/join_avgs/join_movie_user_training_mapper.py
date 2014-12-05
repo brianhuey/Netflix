@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
-""" input: training set
-    output: key as movieid"""
+""" Input: movie, user, rating, date
+    Output: Same data with movie as key"""
 for line in sys.stdin:
     fields = line.strip().split(",")
     if len(fields) == 4:

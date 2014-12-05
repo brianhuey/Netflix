@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import sys, math
-""" Create dictionary with movie as a key, sort by date and
-    calculate the time since the movie was last rated"""
+""" Calculate the time coefficient basd on Koren, Bell
+    for each user.
+    Output: user, coefficient"""
 current_user = None
 theta_list = []
 count = 0

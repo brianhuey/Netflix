@@ -2,7 +2,7 @@
 import sys, csv
 """ input: Mapped data, must run on hadoop with
     -file path/to/movie_averages.txt#movie_averages.txt,path/to/user_averages.txt#user_averages.txt
-    output: training set with movie_total averages appended"""
+    output: training set with movie_total and user_total averages appended"""
 sys.path.append('.')
 movie_dic = {}
 user_dic = {}
