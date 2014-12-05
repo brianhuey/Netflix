@@ -1,3 +1,5 @@
+Author: Renee Rao
+
 To compute cos similarity for the validation sets, and run final_similarity_predictions in python, varying the inputs (datafiles from S3) accordingly.
 
 
@@ -20,7 +22,7 @@ inputs:
 
 To run do.cos.graphs.R which show distribution of features on ratings and non-ratings of validation setA to assess feature utility:
 
-In R run source("do.cos.graphs") after moving the files setA.a.cos.test.predictions.scaled and setA.b.cos.test.predictions.scaled to this directory from s3/stat157-uq85def/home/reneerao/Data for Netflix project.
+In R run source("do.cos.graphs") after moving the files setA.a.cos.test.predictions.scaled and setA.b.cos.test.predictions.scaled to this directory from s3/stat157-uq85def/home/reneerao/Data for Netflix project/validation_sets_features.
 
 
 
