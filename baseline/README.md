@@ -18,7 +18,7 @@ http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 <br>/time_coefficient - extra time coefficient code, not used
 <br>/total - calculates total ratings for validation purposes
 
-The workflow is as follows:
+<h2>Workflow:</h2>
 <br> Within each directory there should be a mapper and reducer. Each step assumes the user runs both.
 <br>1) /movie_total and /user_total are run, the output is fed in to movie_averages.py and user_averages.py to generate movie_averages.txt and user_averages.txt
 <br>2) training data, user_averages.txt, movie_averages.txt are inputs to the mapper and reducer in /join_avgs

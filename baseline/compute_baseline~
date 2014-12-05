@@ -1,4 +1,0 @@
-#!/usr/bin/bash
-
-python sample_ratings.py users < training_set_sample.txt > users.txt
-python sample_ratings.py  < training_set_sample.txt > movies.txt
