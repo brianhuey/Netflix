@@ -30,3 +30,8 @@ http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 <br>6) /user_sqrt_time is an input to /user_center_time
 <br>7) /user_center_time is an input to /movie_time_coefficient and /user_time_coefficient which generates movie_coeff.txt and user_coeff.txt respectively.
 <br>8) Run append_global_effect.py to attach the global affect feature to the validation/test set.
+
+
+To run do.global_effects.graphs.R which show distribution of features on ratings and non-ratings of validation setA to assess feature utility:
+
+In R run source("do.global_effects.graphs") after moving the files setA.a.time.fixed and setA.b.time.fixed to this directory from s3/stat157-uq85def/home/reneerao/Data for Netflix project/validation_sets_features.
