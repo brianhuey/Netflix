@@ -21,11 +21,11 @@
 \maketitle
 
 \section{Introduction}
-We are working the Netflix dataset used in the 2007 KDD cup competition which provides information on characteristics of users of the Netflix video services who rated movies from the years 1998 to 2006. (http://www.kdd.org/kdd-cup-2007-consumer-recommendations)
+We worked with the Netflix dataset used in the 2007 KDD cup competition which provides competitors with user ID, movie ID and timestamp for those who rated movies from the years 1998 to 2006. (http://www.kdd.org/kdd-cup-2007-consumer-recommendations)
 
-We need to predict which users rated which movies in 2006. To test this we use a provided set of roughly 100\,000 (user\_id\, movie\_id) pairs where the users and movies are drawn from the Netflix Prize training data set (where none of the pairs were rated in the training set.) Using this list we will try to predict the probability that each pair was rated in 2006 (i.e.the probability that user\_id rated movie\_id is in the 2006 set of ratings). It is important to note that the actual rating is irrelevant; we are only interested in whether the movie was rated by that user sometime in 2006. Our success at this task will be computed by looking at the root mean squared error (RMSE) between our predictions for each pairs and actual values for the pairs (which are 0 or 1 if the pair is unrated or rated respectively). 
+We were asked to predict the probability that a user rated a given movie in 2006. To test this we were provided set of roughly 100\,000 (user\_id\, movie\_id) pairs where the user and movie IDs are drawn from the Netflix Prize training data set (where none of the pairs were rated in the training set.) Using this list we will try to predict the probability that each pair was rated in 2006 (i.e.the probability that user\_id rated movie\_id is in the 2006 set of ratings). It is important to note that the actual rating is irrelevant; we are only interested in whether the movie was rated by that user sometime in 2006. Our success at this task was computed by looking at the root mean squared error (RMSE) between our predictions for each pairs and actual values for the pairs (which are 0 or 1 if the pair is unrated or rated respectively). 
 
-We are provided with a training data set of roughly 100.5 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of 0.27. The KDD cup winner had an RMSE score of 0.256. \cite{1} We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed and reproduced on github. Using this metric we selected three features to input to our model.
+We were provided with a training data set of roughly 100.5 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating. We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of 0.27. The KDD cup winner had an RMSE score of 0.256. \cite{1} We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed and reproduced on Github. Using this metric we selected three features to input to our model.
    
 \begin{enumerate}
 \item Non-Negative Matrix Factorization (NMF) 
@@ -49,9 +49,9 @@ Doing so allowed us to better analyze feature utility by visualizing the differe
 \section{Features}
 
 \subsection{Non-negative matrix factorization (NNMF)} 
-We use non-negative matrix factorization to develop user features and
+We used non-negative matrix factorization to develop user features and
 movie features to then predict ratings for the Netflix data set. To do
-this we estimate $A$, the matrix of movie and user ids, most of which
+this we estimated $A$, the matrix of movie and user ids, most of which
 is considered unknown, by decomposing it into a user matrix, V and a
 movie matrix, $U$ based on $K$ latent factors, such that $A \approx U
 x V = \overline{A}$.  Under this model each row of matrix U is
@@ -88,17 +88,17 @@ ensure that $\bar{A}$ does not converge to all ones.
 It would be prohibitive to sum over all non-zeros. 
 
 \item
-{\bf Nonnegativity:} We enforce positivity (which is certainly non-negative) 
+{\bf Nonnegativity:} We enforced positivity (which is certainly non-negative) 
 on the weights in the matrix
 factor by moving all weights away from zero if they
 get too close to zero, and making negative weights
 positive if the gradient pushes them to negative.
 
-\item {\bf Spread:} We also normalize the factors (using a Gram-Schmidt type procedure to make sure all the factors don't simply repeat). We again enforce positivity here by staying away from zero.
+\item {\bf Spread:} We also normalized the factors (using a Gram-Schmidt type procedure to make sure all the factors don't simply repeat). We again enforced positivity here by staying away from zero.
 
 \end{itemize}
 
-The distribution of the NMF feature on validation ratings and non-ratings can be viewed in the nmf folder on github.
+The distribution of the NMF feature on validation ratings and non-ratings can be viewed in the nmf folder on Github.
 
 \subsection{Global Effects}
 
@@ -116,12 +116,12 @@ Where \(r_{ui}\) is the residual probability and \(x_{mu}\) is equal to the squa
 The final estimate of \(\theta\) is:
 \[\theta_{m}=\frac{\eta_{m}\hat{\theta}_{m}}{\eta_{m}+\alpha}\]
 Where \(\alpha\) is a tuned parameter.
-The distribution of the global effect feature on validation ratings and non-ratings can be viewed in the baseline folder on github.
+The distribution of the global effect feature on validation ratings and non-ratings can be viewed in the baseline folder on Github.
 
 \subsection{Cosine Similarity}
-For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated.
+For these features we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we computed the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature, for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The higher the value, the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated.
 
-The distribution of the cosine similarity feature on validation ratings and non-ratings can be viewed in the cosine folder on github.
+The distribution of the cosine similarity feature on validation ratings and non-ratings can be viewed in the cosine folder on Github.
  
 \section{Transformation and Logistic Regression}
 \subsection{Transformation}
@@ -130,7 +130,7 @@ The distribution of the cosine similarity feature on validation ratings and non-
 Upon computing features for the test set we normalized the values of
 each feature. The natural way to do this was to use Bayes rule to map
 the arbitrary values of our features to probabilities of rating based
-on those values. After using the pre-2004 training set to compute
+on those values. After using the pre-2005 training set to compute
 features for our 2005 validation sets (described in the data section)
 we used the distributions of the feature values on the rated
 validation set and the unrated validation set to compute the
@@ -195,7 +195,7 @@ these data and this task and pushed several features into it.
 Please see Appendix for list of tools used and locations of data in S3.
 
 \section{Division of Labor}
-Note: Authorship, comments and readme's for all code can be found on the github website for the project. 
+Note: Authorship, comments and readme's for all code can be found on the Github repo for the project. 
 
 {\bf Brian:}
 
