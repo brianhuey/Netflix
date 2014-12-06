@@ -1,6 +1,6 @@
 Baseline calculations
-Author: Brian Huey
 ===============
+Author: Brian Huey
 Global effects calculations as described in Bell, Koren
 http://www.cs.uic.edu/~liub/KDD-cup-2007/proceedings/Neighbor-Koren.pdf
 
