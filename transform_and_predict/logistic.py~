@@ -1,13 +1,8 @@
-# Functions to fit and predict with logistic regression model.
-
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-# Trains a logistic regression model on a feature file and test pair file
-
 def train_logistic_model(feature_files,test_pair_filename):
 
-# Arrange data for logistic regression model
     y = []
     cnt = 0
     pairs_to_index = {}
@@ -42,18 +37,14 @@ def train_logistic_model(feature_files,test_pair_filename):
 
     logistic_model.fit(X,y)
     
-# Return the model
-
     return logistic_model
 
-
-# A function to output predictions of feature values given a fitted model
 
 def predict_logistic_model(logistic_model,predict_pairs_file,
                            feature_files,outfile_name="./prediction",correct_imbalance=1.0):
     cnt = 0
     pairs_to_index = {}
-# Format data to work with logistic regression package
+
     pair_file = open(predict_pairs_file)
     for line in pair_file:
         fields = line.strip().split(",")
@@ -81,7 +72,6 @@ def predict_logistic_model(logistic_model,predict_pairs_file,
 
         feature_no+=1
 
-# Call model to find probabilites!
     y = logistic_model.predict_proba(X)
 
     outfile = open(outfile_name, "w")

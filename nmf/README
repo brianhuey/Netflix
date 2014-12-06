@@ -5,7 +5,7 @@ This is the code we used to compute our NMF features. It is quite slow, and prob
 
 To get nmf features on validation setA.a (or setA.b,setB.a,setB.b):
 
-Run the function in python with the following inputs
+Run the function final_nmf_prediction() in python with the following inputs
 
 inputs: filename = 'pre_2005.training' (available at C3/stat157-uq85def/shared/netflix/training2/pre_2005.training)
    	test_filename = 'setA.a', (avaiable at C3/stat157-uq85def/shared/netflix/feature_sample/setA.a

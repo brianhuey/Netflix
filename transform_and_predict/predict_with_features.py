@@ -1,3 +1,6 @@
+# This is the driver file which takes input files below and outputs predictions
+# under the logistic regression model which it fits as well as the RMSE
+
 import sys
 import os
 
@@ -7,6 +10,14 @@ sys.path.append('../classify/')
 from some_tools import *
 import transformation as trans
 
+# Input files: 
+# [answer set with features scaled and appended,
+# 4 Validation sets with features scaled and appended 
+# (rated, unrated, rated, unrated). The first two are
+# used in the Bayes transformation and the last two are
+# used in fitting the logistic regression model]
+
+# Comment out the inputs below to exclude features from our predictions
 all_pos_feature_files = [
     ["answer_features/cluster.features.w.degree.scaled",
      "validation_sets_features/setA.a.nmf.predictions.scaled",
@@ -48,6 +59,8 @@ all_pos_feature_files = [
 all_feature_files = all_pos_feature_files
 print "all features"
 
+
+# Input our 'training' validation sets and the answer set to the logistic regression model
 regression_info = ["validation_sets_features/setB.a","validation_sets_features/setB.b","answer_features/KDD_2007_who_rated_what.fixed.txt",
                    "this.is.outfile.name"]
 
@@ -65,6 +78,7 @@ for feature_file_info in all_feature_files:
     pos_validation_file = feature_file_info[3]
     neg_validation_file = feature_file_info[4]
     
+# Do transformations and output results to be modeled
     for fname in [answer_set,pos_validation_file,neg_validation_file]:
         trans.transform_features(fname,pos_dist_file,neg_dist_file, outfile_name =fname+".transformed")
 
@@ -83,6 +97,8 @@ format_data(regression_info[0],regression_info[1],validation_answer_fname)
 
 import logistic as log
 
+# Run logistic regression model on newly transformed testing set, using second validation set as a 'training' instance. 
+
 model = log.train_logistic_model(validation_feature_files, validation_answer_fname) 
 
 prediction_file = regression_info[3]
@@ -92,6 +108,7 @@ prediction_file = regression_info[3]
 # for fname in answer_feature_files:
 #     os.system("tail " + fname)
 
+# Make predictions using models!
 
 log.predict_logistic_model(model, regression_info[2],
                            answer_feature_files, 
@@ -101,6 +118,8 @@ log.predict_logistic_model(model, regression_info[2],
 # print "prediction file"
 # print prediction_file
 # os.system("tail " + fname)
+
+# Compute the RMSE between our predictions and the true values!
 
 compute_rmse(prediction_file, regression_info[2])
 

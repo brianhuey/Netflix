@@ -395,7 +395,6 @@ def find_index(array,val,left=0, right = False):
         else:
             return find_index(array,val,left=left,right=mid)
 
-
 # Main Evaulation loop.
 def driver_movie_data_test(train_filename,test_filename,k):
 
@@ -455,50 +454,6 @@ def driver_movie_data_test(train_filename,test_filename,k):
     return(U1,V1,reverse_movie,reverse_user)
 
 
-# Baseline movie prediction based on user/movie counts and independence.
-def user_movie_pred(test_file_name, outfile_name = 'baseline.out'):
-    user_file = open("../baseline/user_total/user_total_fromAWS")
-    movie_file = open("../baseline/movie_total/movie_total_fromAWS")
-    test_file = open(test_file_name)
-
-    total_movies = 17750 # Calculated
-    total_users = 480189 # Calculated
-    overall_rate = (100480507/float(total_movies * total_users))
-    movie_tots = {}
-    ratings_by_user = {}
-
-    for line in test_file:
-        fields = line.strip().split(",")
-        if not fields[1] in ratings_by_user:
-            ratings_by_user[fields[1]] = {}
-        ratings_by_user[fields[1]][fields[0]] = 0
-    test_file.close()
-
-    for line in movie_file:
-        fields = line.strip().split()
-        if fields[0] == 'total':
-            continue
-        movie_tots[fields[0]] = float(fields[1])
-
-    for line in user_file:
-        fields = line.strip().split()
-        if fields[0] == 'total':
-            continue
-        user_id = fields[0]
-        user_count = float(fields[1])
-        if user_id in ratings_by_user:
-            for movie in ratings_by_user[user_id]:
-                movie_count = movie_tots[movie]
-                ratings_by_user[user_id][movie] = movie_count*user_count/(total_users*total_movies)
-
-    outfile = open(outfile_name,"w")
-
-    test_file = open(test_file_name)
-    for line in test_file:
-        fields = line.strip().split(",")
-        user_id = fields[1]
-        movie_id = fields[0]
-        print >> outfile, "%s,%s, %0.5f" % (movie_id,user_id,ratings_by_user[user_id][movie_id])
 
 #test_nmf_iter(100,100,10,.7,binary=True)
 
@@ -583,29 +538,30 @@ def driver_movie_data_test_sklearn(train_filename,test_filename,k):
         print_movie_factor(U1,reverse_movie, i)
     return(U1,V1,reverse_movie,reverse_user)
 
-def test_basic():
-    (U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.1M.train.txt",
-                                                           "../data/sample.1M.test.txt",5)
-    # Doing baseline tests on ratings.
-    user_movie_pred("test.predictions",
-                    outfile_name = 'baseline.ratings.predictions')
-    # Doing baseline tests on random pairs.
-    user_movie_pred("test.rndpairs.predictions",
-                    outfile_name = "baseline.rndpairs.predictions")
-    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
-    user_movie_pred("test.hard.rndpairs.predictions",
-                    outfile_name = "baseline.hard.rndpairs.predictions")
 
-def test_sklearn():
-    (U,V,reverse_movie,reverse_user) = driver_movie_data_test_sklearn("../data/sample.100K.train.txt",
-                                                                      "../data/sample.100K.test.txt",5)
-    # Doing baseline tests on ratings.
-    user_movie_pred("test.sklearn.predictions",
-                    outfile_name = 'baseline.sklearn.ratings.predictions')
-    # Doing baseline tests on random pairs.
-    user_movie_pred("test.sklearn.rndpairs.predictions",
-                    outfile_name = "baseline.sklearn.rndpairs.predictions")
-    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
-    user_movie_pred("test.sklearn.hard.rndpairs.predictions",
-                    outfile_name = "baseline.sklearn.hard.rndpairs.predictions")
+def final_nmf_prediction(train_filename,test_filename,dir_prefix="./nmf.", k=5):
+
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
+
+    # Do nnmf
+    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz,hard=True)
+
+    # Read test data
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
+    (error,del_U,del_V,random_pairs) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz,hard=True)
+
+    reverse_user = inverse_map(user_ids)
+    reverse_movie = inverse_map(movie_ids)
+
+    print ("test rsme", math.sqrt(error))
+    # Test on Ratings!
+    outfile = open(dir_prefix+"test.predictions","w")
+    print ("Doing %d test ratings" % A.nnz)
+    (n,m) = A.shape
+    for row in xrange(n):
+        for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
+            col = A.indices[row_col_index]
+            elt = A.data[row_col_index]
+            print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+
 

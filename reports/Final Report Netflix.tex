@@ -25,11 +25,7 @@ We are working the Netflix dataset used in the 2007 KDD cup competition which pr
 
 We need to predict which users rated which movies in 2006. To test this we use a provided set of roughly 100\,000 (user\_id\, movie\_id) pairs where the users and movies are drawn from the Netflix Prize training data set (where none of the pairs were rated in the training set.) Using this list we will try to predict the probability that each pair was rated in 2006 (i.e.the probability that user\_id rated movie\_id is in the 2006 set of ratings). It is important to note that the actual rating is irrelevant; we are only interested in whether the movie was rated by that user sometime in 2006. Our success at this task will be computed by looking at the root mean squared error (RMSE) between our predictions for each pairs and actual values for the pairs (which are 0 or 1 if the pair is unrated or rated respectively). 
 
-We are provided with a training data set of roughly 100.5 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.
-
-We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of 0.27. The KDD cup winner had an RMSE score of 0.256.
-
-We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed below and reproduced on github. Using this metric we selected three features to input to our model.
+We are provided with a training data set of roughly 100.5 million ratings for the previous years of the format user\_id\,movie\_id\,date of rating.We note this task is very difficult, as a trivial method of predicting every movie is not rated gives an RMSE of 0.27. The KDD cup winner had an RMSE score of 0.256. \cite{1} We feel that an interesting feature is one that is different for rated movies than for unrated movies, so to assess feature utility heuristically, we graphed the distribution of each feature on the our validation set, and looked for features that produced a differential distribution for rated pairs versus unrated pairs. These graphs can be viewed and reproduced on github. Using this metric we selected three features to input to our model.
    
 \begin{enumerate}
 \item Non-Negative Matrix Factorization (NMF) 
@@ -37,14 +33,7 @@ We feel that an interesting feature is one that is different for rated movies th
 \item Cosine Similarity
 \end{enumerate}
 
-We then computed these features for our validation set using AWS MapReduce and an EC2 instance, and used the distribution of these features to create a bayesian transformation used to normalize the features values on the test set, before feeding them into a logistic regression model to make predictions and compute RMSE. 
-
-(PUT BEAUTIFUL GRAPHIC BELOW)
-https://www.sharelatex.com/blog/2013/08/29/tikz-series-pt3.html
-
-Our final result was an RMSE of .2667, which compares favorably with the basic prediction of all zeros but is significantly less than the winner of the 2007 competition. 
-
-A detailed description of our data, features, transformation, model processing, and data selection follows. 
+We then computed these features for our validation set using AWS MapReduce and an EC2 instance, and used the distribution of these features to create a bayesian transformation used to normalize the features values on the test set, before feeding them into a logistic regression model to make predictions and compute RMSE. Our final result was an RMSE of .2667, which compares favorably with the basic prediction of all zeros but is significantly less than the winner of the 2007 competition. A detailed description of our data, features, transformation, model processing, and data selection follows. 
 
 \section{The Data}
 
@@ -56,14 +45,6 @@ In this project we viewed the data pre-2005 as training data and 2005 as validat
 \end{itemize}
 	
 Doing so allowed us to better analyze feature utility by visualizing the difference of features between the two sets as well as to compute the probability the was rated for given feature values used in the transformation step for the final 2006 test set. 
-\subsubsection{Data Locations}
-\begin{itemize}
-\item Pre-2005 training set: s3://stat157-uq85def/shared/netflix/pre2005\_training\_join/
-\item Post-2005 validation set: s3://stat157-uq85def/shared/netflix/post2005\_training.txt
-\item Training set: s3://stat157-uq85def/shared/netflix/training\_set/training\_set\_reshape.txt
-\item Test set: s3://stat157-uq85def/shared/netflix/test\_sets/
-\item Answer set: s3://stat157-uq85def/shared/netflix/answer\_sets/
-\end{itemize}
 
 \section{Features}
 
@@ -113,17 +94,15 @@ factor by moving all weights away from zero if they
 get too close to zero, and making negative weights
 positive if the gradient pushes them to negative.
 
-\item {\bf Spread:} We also normalize the factors (using a Gram-Schmidt type
-         procedure to make sure all the factors don't simply repeat).
-         We again enforce positivity here by staying away from zero.
+\item {\bf Spread:} We also normalize the factors (using a Gram-Schmidt type procedure to make sure all the factors don't simply repeat). We again enforce positivity here by staying away from zero.
 
 \end{itemize}
 
-The distribution of the NMF feature on validation ratings and non-ratings is below: 
+The distribution of the NMF feature on validation ratings and non-ratings can be viewed in the nmf folder on github.
 
 \subsection{Global Effects}
 
-The global effect feature is an adjustment to the overall probability that a user/movie pair is rated in 2006, assuming no information (i.e. number of ratings in the training set divided by the total number of user/movie pair combinations), which is approximately 1.17\%. Beginning at the first step, we started with the overall probability and subtracted the first effect from it, creating a residual which was the input to the next step, repeating until all effects have been accounted for. This process is based on work described by Bell and Koren.\footnote{Bell, R., Koren, Y. ?Improved Neighborhood-based Collaborative Filtering? KDD Cup ?07, August 12, 2007, San Jose, CA.}
+The global effect feature is an adjustment to the overall probability that a user/movie pair is rated in 2006, assuming no information (i.e. number of ratings in the training set divided by the total number of user/movie pair combinations), which is approximately 1.17\%. Beginning at the first step, we started with the overall probability and subtracted the first effect from it, creating a residual which was the input to the next step, repeating until all effects have been accounted for. This process is based on work described by Bell and Koren.\cite{3}
 \[global\_effect_{mu}=overall\_avg-avg_{m}-avg_{u}-time_{m}-time_{u}\]
 Where \(u\) and \(m\) are user and movie, respectively.
 \subsubsection{User/Movie Averages}
@@ -137,23 +116,48 @@ Where \(r_{ui}\) is the residual probability and \(x_{mu}\) is equal to the squa
 The final estimate of \(\theta\) is:
 \[\theta_{m}=\frac{\eta_{m}\hat{\theta}_{m}}{\eta_{m}+\alpha}\]
 Where \(\alpha\) is a tuned parameter.
-\subsubsection{Feature locations}
-\begin{itemize}
-\item User averages: s3://stat157-uq85def/home/sbhuey/outputs/user\_averages.txt
-\item Movie averages: s3://stat157-uq85def/home/sbhuey/outputs/movie\_averages.txt
-\item User coefficients: s3://stat157-uq85def/home/sbhuey/outputs/user\_coefficients.txt
-\item Movie coefficients: s3://stat157-uq85def/home/sbhuey/outputs/movie\_coefficients.txt
-\end{itemize}
+The distribution of the global effect feature on validation ratings and non-ratings can be viewed in the baseline folder on github.
+
 \subsection{Cosine Similarity}
-For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated. 
+For these feature we view each movie as a vector with an entry for each user. The entry is a 1 if the movie was rated by the user and it is a zero otherwise. With this view we can compute the cosine of the angle of the two movie vectors by taking their dot product and dividing it by the magnitudes of the two vectors. Initiatively movies with a high cosine similarity have a high fraction of users who have rated both movies. In this feature for a user-movie pair, (U,M), we find all the movies rated by U and find their average value of the cosine similarity with M. The high this value the more likely we would expect this movie to be rated by this user, since many users rated this movie and other movies that this user also rated.
 
+The distribution of the cosine similarity feature on validation ratings and non-ratings can be viewed in the cosine folder on github.
+ 
 \section{Transformation and Logistic Regression}
-
 \subsection{Transformation}
-Upon computing features for the test set we normalized  the values of each feature. The natural way to do this was to use Bayes rule to map the arbitrary values of our features to probabilities of rating based on those values. After using the pre-2004 training set to compute features for our 2005 validation sets (described in the data section) we used the distributions of the feature values on the rated validation set and the unrated validation set to compute the probability that a movie-user pair with a given feature value using Bayes rule, that is to divide the number of pairs with that feature value in the rated validation set by the total number of pairs with that feature value in both validation sets (rated and unrated). We, of course, must bucket our features values to do this computation.  We then use this validation set mapping to transform features computed for the 2006 test using the full training set into numbers which could be viewed as 'probabilities'. We originally used these probabilities for a naive Bayes model, but as some of our features appeared to be correlated we decided to pass these normalized values into a logistic regression model instead. This allows logistic regression to be fed features that are between 0 and 1 and thus may avoid the danger of its predictions being influenced too much by any single variation in a feature.  
+
+
+Upon computing features for the test set we normalized the values of
+each feature. The natural way to do this was to use Bayes rule to map
+the arbitrary values of our features to probabilities of rating based
+on those values. After using the pre-2004 training set to compute
+features for our 2005 validation sets (described in the data section)
+we used the distributions of the feature values on the rated
+validation set and the unrated validation set to compute the
+probability that a movie-user pair with a given feature value using
+Bayes rule, that is to divide the number of pairs with that feature
+value in the rated validation set by the total number of pairs with
+that feature value in both validation sets (rated and unrated). We, of
+course, must bucket our features values to do this computation.  We
+then use this validation set mapping to transform features computed
+for the 2006 test using the full training set into numbers which could
+be viewed as 'probabilities'. We originally used these probabilities
+for a naive Bayes model, but as some of our features appeared to be
+correlated we decided to pass these normalized values into a logistic
+regression model instead. This allows logistic regression to be fed
+features that are between 0 and 1 and thus may avoid the danger of its
+predictions being influenced too much by any single variation in a
+feature.
 
 \subsection{Logistic Regression}
-We used logistic regression to make a model using data from rating and unrated 2005 validation set pairs and the transformed features we discussed above. The 'training set' for the model was balance among rated and unrated pairs. The true test set, however is imbalance; the rated pairs only comprise roughly 7 percent of the total. Thus we scale the output of the logistic regression model so that the average predicted probability is around 7 percent. 
+
+We used logistic regression to make a model using data from rated and
+unrated 2005 validation set pairs and the transformed features we
+discussed above. The 'training set' for the model was balance among
+rated and unrated pairs. The true test set, however is imbalance; the
+rated pairs only comprise roughly 7 percent of the total.\cite{1} Thus
+we scale the output of the logistic regression model so that the
+average predicted probability is around 7 percent.
 
 \section{Results and Discussion}
 
@@ -165,39 +169,42 @@ Our results using the logistic regression model and combinations of our features
     \hline
     Baseline & Global & NMF & Cosine & RMSE \\ \hline
     \checkmark &  & & & .2684 \\ \hline
-    \checkmark & \checkmark &  & & .2681 \\ \hline
-     \checkmark & & \checkmark & & .2682\\ \hline
-     \checkmark & & & \checkmark & .2682\\ \hline
+    \checkmark & \checkmark &  & & .2669 \\ \hline
+     \checkmark & & \checkmark & & .2683\\ \hline
+     \checkmark & & & \checkmark & .2668\\ \hline
       \checkmark & \checkmark & \checkmark & \checkmark & .2667\\ \hline
     \end{tabular}
 \end{center}
 
 \subsection{Discussion}
-While our model could not compete with the first place winner it did place us between the 3rd and 4th place groups in the competition, so ultimately our model is learning something. Ideally we would like to further this project by running our features through a greater variety of models, tuning the many parameters we used and adjusted heuristically when computing our features, and continuing to explore other features that demonstrated promise on the validation sets, such as outside information about release dates of movies from websites like Rotten Tomatoes. Ultimately, however, we did not have enough time to flesh the project out as fully as we originally envisioned, as we spent quite a bit of time computing our current features and testing them on our validation sets. Creating the validation set correctly was particularly key to getting good measure of the utility of our features, and ultimately cost us some time. 
+
+While our model did not match the performance of the first place
+winner, its performance places it between the 3rd and 4th place groups
+in the competition \cite{4}, so ultimately our model is learning
+something.  Ideally we could perhaps have improved our performance by
+running our features through a greater variety of models, tuning the
+many parameters we used and adjusted heuristically when computing our
+features, experimenting with validation methodology, and continuing to
+explore other features such as outside information about release dates
+of movies from websites like Rotten Tomatoes.  This process would be
+more efficient now that we have built our pipeline for working with
+these data and this task and pushed several features into it.
 
 
-\section{Tools}
-\begin{itemize}
-\item  sklean.liblinear.LogisticRegresion from the scikit package.
-\item  A variety of python libraries including numpy, and scipy.spare. 
-\item unix tools such as grep
-\item python,  R 
-\item AWS EC2, S3, MapReduce/Hadoop
-\end{itemize}
+
+Please see Appendix for list of tools used and locations of data in S3.
+
 \section{Division of Labor}
 Note: Authorship, comments and readme's for all code can be found on the github website for the project. 
-{\bf Brian}
+
+{\bf Brian:}
 
 \begin{enumerate}
 \item Join movie\_titles.txt to Rotten Tomatoes info 
 \item Set up and organized github
-\item Upload of data to sc3
-\item Subset training data in to pre and post 2005 (map reduce).
-\item Calculate the average number of movies rated over all users in the training set (mapreduce).
-\item Calculate the average number of ratings over all movies in the training set (mapreduce).
-\item Calculate the average number of movies rated for each user in the training set (mapreduce).
-\item Calculate the average number of ratings for each movie in the training set (mapreduce).
-\item Alternate Baseline method.
+\item Computed Global Effects feature using mapReduce
+\item wrote an alternative baseline approach
+\item organized and motivated data formatting
 \end{enumerate}
 
 {\bf Renee:}
@@ -208,14 +215,49 @@ Note: Authorship, comments and readme's for all code can be found on the github 
 \item Wrote Non-Negative Matrix Factorization Model and Cosine Similarity in Python.
 \item Evaluated feature worthiness.
 \item Generated associated figures for evaluation.
-\item Wrote reports. 
 \end{enumerate}
 
 
+\begin{thebibliography}{}
 
+\bibitem{1}
+M. Kurucz, A. A. Benczur, T. Kiss, I. Nagy, A. Szabo, and B. Torma. Who rated what: a combination of SVD, correlation and frequent sequence mining. In Proc. KDD Cup and Workshop, 2007. 
+\bibitem{2}
+J. Sueiras, A. Salafranca, and J. L. Florez, "A classical predictive modeling approach for Task Who rated what ? of the KDD CUP 2007," SIGKDD Explorations, vol. 9, no. 2, pp. 57-61, 2007. 
+\bibitem{3}
+Bell, R., Koren, Y. ?Improved Neighborhood-based Collaborative Filtering? KDD Cup ?07, August 12, 2007, San Jose, CA
+\bibitem{4}
+"KDD Cup 2007: Consumer Recommendations." Sig KDD. ACM SIGKDD, 12 Aug. 2007. Web. 05 Dec. 2014.
 
+  \end{thebibliography}
 
+\section{Appendix: Tools and S3 locations}
 
+\subsection{Tools used}
+\begin{itemize}
+\item  sklean.liblinear.LogisticRegresion from the scikit package.
+\item  A variety of python libraries including numpy, and scipy.spare. 
+\item unix tools such as grep
+\item python,  R 
+\item AWS EC2, S3, MapReduce/Hadoop
+\end{itemize} 
+
+\subsubsection{S3 locations}
+\begin{itemize}
+\item User averages: s3://stat157-uq85def/home/sbhuey/outputs/user\_averages.txt
+\item Movie averages: s3://stat157-uq85def/home/sbhuey/outputs/movie\_averages.txt
+\item User coefficients: s3://stat157-uq85def/home/sbhuey/outputs/user\_coefficients.txt
+\item Movie coefficients: s3://stat157-uq85def/home/sbhuey/outputs/movie\_coefficients.txt
+\item Validation Sets: s3://stat157-uq85def/shared/netflix/feature\_samples
+\item Test Set: s3://stat157-uq85def/home/reneerao/Data for Netflix project/KDD\_2007\_who\_rated\_what.fixed.txt
+\item Validation sets with feature values appended s3://stat157-uq85def/home/reneerao/Data for Netflix project/validation\_sets\_features
+\item Answer sets with feature values appended s3://stat157-uq85def/home/reneerao/Data for Netflix project/answer\_features
+\item Pre-2005 training set: s3://stat157-uq85def/shared/netflix/pre2005\_training\_join/
+\item Post-2005 validation set: s3://stat157-uq85def/shared/netflix/post2005\_training.txt
+\item Training set: s3://stat157-uq85def/shared/netflix/training\_set/training\_set\_reshape.txt
+\item Test set: s3://stat157-uq85def/shared/netflix/test\_sets/
+\item Answer set: s3://stat157-uq85def/shared/netflix/answer\_sets/
+\end{itemize}
 
 \end{document}
 

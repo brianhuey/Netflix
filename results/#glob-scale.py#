@@ -1,4 +1,0 @@
-import glob
-
-filenames = glob("setA.b.cos*")
-

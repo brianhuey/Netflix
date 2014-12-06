@@ -1,4 +1,0 @@
-
-import glob
-
-glob.glob("training_set/mv_001610?.txt")
