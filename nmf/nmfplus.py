@@ -395,41 +395,6 @@ def find_index(array,val,left=0, right = False):
         else:
             return find_index(array,val,left=left,right=mid)
 
-def final_nmf_prediction(filename,test_filename,dir_prefix="./nmf.", cosine_sim=False):
-
-    outfile = open(dir_prefix+"test.predictions","w")
-
-    (A,movie_ids,user_ids,m_count,u_count) = read_data(filename)
-    
-    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz,hard=True)
-
-    reverse_user = inverse_map(user_ids)
-    reverse_movie = inverse_map(movie_ids)
-    At = A.transpose()
-    
-    trainA = A
-    train_m_count = m_count
-    train_u_count = u_count
-    At = At.tocsr()
-
-    (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
-
-    print ("Total of %d test ratings" % A.nnz)
-    (n,m) = A.shape
-    cnt=0
-
-    print_int = 100
-    for i in xrange(A.nnz)):
-        movie = find_index(A.indptr,i)            
-        user = A.indices[i]
-        (val1,deg) = predict_with_similarity(user,movie,At,trainA,cosine_sim)
-        cnt+=1
-        if (cnt%print_int == 0):
-            print "cnt,movie,user,deg,val1", cnt, row,col,deg,val1
-        print >> outfile, "%s,%s,%0.5f,%0.5f" % (reverse_movie[movie],reverse_user[user], val1,deg)
-        
-    outfile.close()
-
 # Main Evaulation loop.
 def driver_movie_data_test(train_filename,test_filename,k):
 
@@ -573,29 +538,30 @@ def driver_movie_data_test_sklearn(train_filename,test_filename,k):
         print_movie_factor(U1,reverse_movie, i)
     return(U1,V1,reverse_movie,reverse_user)
 
-#def test_basic():
-    #(U,V,reverse_movie,reverse_user) = driver_movie_data_test("../data/sample.1M.train.txt",
-                                                           "../data/sample.1M.test.txt",5)
-    # Doing baseline tests on ratings.
-    #user_movie_pred("test.predictions",
-    #                outfile_name = 'baseline.ratings.predictions')
-    # Doing baseline tests on random pairs.
-    #user_movie_pred("test.rndpairs.predictions",
-   #                 outfile_name = "baseline.rndpairs.predictions")
-    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
-  #  user_movie_pred("test.hard.rndpairs.predictions",
-  #                  outfile_name = "baseline.hard.rndpairs.predictions")
 
-#def test_sklearn():
-    #(U,V,reverse_movie,reverse_user) = driver_movie_data_test_sklearn("../data/sample.100K.train.txt",
- #                                                                     "../data/sample.100K.test.txt",5)
-    # Doing baseline tests on ratings.
-    #user_movie_pred("test.sklearn.predictions",
-    #                outfile_name = 'baseline.sklearn.ratings.predictions')
-    # Doing baseline tests on random pairs.
-    #user_movie_pred("test.sklearn.rndpairs.predictions",
-    #                outfile_name = "baseline.sklearn.rndpairs.predictions")
-    # Doing baseline tests on random pairs from sample from movie/user pairs weighted independently by count.
-    #user_movie_pred("test.sklearn.hard.rndpairs.predictions",
-    #                outfile_name = "baseline.sklearn.hard.rndpairs.predictions")
+def final_nmf_prediction(train_filename,test_filename,dir_prefix="./nmf.", k=5):
+
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(train_filename)
+
+    # Do nnmf
+    (U1,V1) = hack_nmf_iter(A,k,.07,16*A.nnz,hard=True)
+
+    # Read test data
+    (A,movie_ids,user_ids,m_count,u_count) = read_data(test_filename,movie_ids,user_ids,m_count,u_count,discard=True)
+    (error,del_U,del_V,random_pairs) =  evaluate_gradients(A,U1,V1,.07,16*A.nnz,hard=True)
+
+    reverse_user = inverse_map(user_ids)
+    reverse_movie = inverse_map(movie_ids)
+
+    print ("test rsme", math.sqrt(error))
+    # Test on Ratings!
+    outfile = open(dir_prefix+"test.predictions","w")
+    print ("Doing %d test ratings" % A.nnz)
+    (n,m) = A.shape
+    for row in xrange(n):
+        for row_col_index in xrange(A.indptr[row],A.indptr[row+1]):
+            col = A.indices[row_col_index]
+            elt = A.data[row_col_index]
+            print >> outfile, "%s,%s,%0.5f" % (reverse_movie[row],reverse_user[col], nd.dot(U1[row,:],V1[:,col]))
+
 
