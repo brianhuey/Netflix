@@ -125,10 +125,39 @@ The distribution of the cosine similarity feature on validation ratings and non-
  
 \section{Transformation and Logistic Regression}
 \subsection{Transformation}
-Upon computing features for the test set we normalized  the values of each feature. The natural way to do this was to use Bayes rule to map the arbitrary values of our features to probabilities of rating based on those values. After using the pre-2004 training set to compute features for our 2005 validation sets (described in the data section) we used the distributions of the feature values on the rated validation set and the unrated validation set to compute the probability that a movie-user pair with a given feature value using Bayes rule, that is to divide the number of pairs with that feature value in the rated validation set by the total number of pairs with that feature value in both validation sets (rated and unrated). We, of course, must bucket our features values to do this computation.  We then use this validation set mapping to transform features computed for the 2006 test using the full training set into numbers which could be viewed as 'probabilities'. We originally used these probabilities for a naive Bayes model, but as some of our features appeared to be correlated we decided to pass these normalized values into a logistic regression model instead. This allows logistic regression to be fed features that are between 0 and 1 and thus may avoid the danger of its predictions being influenced too much by any single variation in a feature.  
+
+
+Upon computing features for the test set we normalized the values of
+each feature. The natural way to do this was to use Bayes rule to map
+the arbitrary values of our features to probabilities of rating based
+on those values. After using the pre-2004 training set to compute
+features for our 2005 validation sets (described in the data section)
+we used the distributions of the feature values on the rated
+validation set and the unrated validation set to compute the
+probability that a movie-user pair with a given feature value using
+Bayes rule, that is to divide the number of pairs with that feature
+value in the rated validation set by the total number of pairs with
+that feature value in both validation sets (rated and unrated). We, of
+course, must bucket our features values to do this computation.  We
+then use this validation set mapping to transform features computed
+for the 2006 test using the full training set into numbers which could
+be viewed as 'probabilities'. We originally used these probabilities
+for a naive Bayes model, but as some of our features appeared to be
+correlated we decided to pass these normalized values into a logistic
+regression model instead. This allows logistic regression to be fed
+features that are between 0 and 1 and thus may avoid the danger of its
+predictions being influenced too much by any single variation in a
+feature.
 
 \subsection{Logistic Regression}
-We used logistic regression to make a model using data from rating and unrated 2005 validation set pairs and the transformed features we discussed above. The 'training set' for the model was balance among rated and unrated pairs. The true test set, however is imbalance; the rated pairs only comprise roughly 7 percent of the total.\cite{1} Thus we scale the output of the logistic regression model so that the average predicted probability is around 7 percent. 
+
+We used logistic regression to make a model using data from rated and
+unrated 2005 validation set pairs and the transformed features we
+discussed above. The 'training set' for the model was balance among
+rated and unrated pairs. The true test set, however is imbalance; the
+rated pairs only comprise roughly 7 percent of the total.\cite{1} Thus
+we scale the output of the logistic regression model so that the
+average predicted probability is around 7 percent.
 
 \section{Results and Discussion}
 
@@ -140,17 +169,30 @@ Our results using the logistic regression model and combinations of our features
     \hline
     Baseline & Global & NMF & Cosine & RMSE \\ \hline
     \checkmark &  & & & .2684 \\ \hline
-    \checkmark & \checkmark &  & & .2681 \\ \hline
-     \checkmark & & \checkmark & & .2682\\ \hline
-     \checkmark & & & \checkmark & .2682\\ \hline
+    \checkmark & \checkmark &  & & .2669 \\ \hline
+     \checkmark & & \checkmark & & .2683\\ \hline
+     \checkmark & & & \checkmark & .2668\\ \hline
       \checkmark & \checkmark & \checkmark & \checkmark & .2667\\ \hline
     \end{tabular}
 \end{center}
 
 \subsection{Discussion}
-While our model could not compete with the first place winner it did place us between the 3rd and 4th place groups in the competition, so ultimately our model is learning something. \cite{4} Ideally we would like to further this project by running our features through a greater variety of models, tuning the many parameters we used and adjusted heuristically when computing our features, and continuing to explore other features that demonstrated promise on the validation sets, such as outside information about release dates of movies from websites like Rotten Tomatoes. Ultimately, however, we did not have enough time to flesh the project out as fully as we originally envisioned, as we spent quite a bit of time computing our current features and testing them on our validation sets. Creating the validation set correctly was particularly key to getting good measure of the utility of our features, and ultimately cost us some time. In the future we will try to account for these kind of errors. 
 
-Please see Appendix for list of tools used and locations of data in S3
+While our model did not match the performance of the first place
+winner, its performance places it between the 3rd and 4th place groups
+in the competition \cite{4}, so ultimately our model is learning
+something.  Ideally we could perhaps have improved our performance by
+running our features through a greater variety of models, tuning the
+many parameters we used and adjusted heuristically when computing our
+features, experimenting with validation methodology, and continuing to
+explore other features such as outside information about release dates
+of movies from websites like Rotten Tomatoes.  This process would be
+more efficient now that we have built our pipeline for working with
+these data and this task and pushed several features into it.
+
+
+
+Please see Appendix for list of tools used and locations of data in S3.
 
 \section{Division of Labor}
 Note: Authorship, comments and readme's for all code can be found on the github website for the project. 
