@@ -1,6 +1,6 @@
 Training Set Sample
 ===============
-Author: Brian Huey
+Author: Brian Huey<br>
 Various subseting and sampling of the training set.
 
 <br>training_set_prepost_2005 - map/reduce job for subseting the training set in to a pre-2005
