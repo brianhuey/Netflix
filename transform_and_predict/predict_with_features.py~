@@ -9,10 +9,10 @@ import transformation as trans
 
 all_pos_feature_files = [
     ["answer_features/cluster.features.w.degree.scaled",
-     "validation_sets_features/setA.a.cluster.predictions.scaled",
-     "validation_sets_features/setA.b.cluster.predictions.scaled",
-     "validation_sets_features/setB.a.cluster.predictions.scaled",
-     "validation_sets_features/setB.b.cluster.predictions.scaled"]
+     "validation_sets_features/setA.a.nmf.predictions.scaled",
+     "validation_sets_features/setA.b.nmf.predictions.scaled",
+     "validation_sets_features/setB.a.nmf.predictions.scaled",
+     "validation_sets_features/setB.b.nmf.predictions.scaled"]
     ,
     ["answer_features/who_rated_what_2006_global_predictions_fixed.txt",
      "validation_sets_features/setA.a.time.fixed",
@@ -48,7 +48,7 @@ all_pos_feature_files = [
 all_feature_files = all_pos_feature_files
 print "all features"
 
-regression_info = ["validation_sets_features/setB.a","validation_sets_features/setB.b","KDD_2007_who_rated_what.fixed.txt",
+regression_info = ["validation_sets_features/setB.a","validation_sets_features/setB.b","answer_features/KDD_2007_who_rated_what.fixed.txt",
                    "this.is.outfile.name"]
 
 

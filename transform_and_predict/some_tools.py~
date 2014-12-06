@@ -1,5 +1,21 @@
+import sys
+
+sys.path.append('../nmf/')
+sys.path.append('../classify/')
+
 import logistic as log
 import math
+
+def tab_to_comma(filename1,outfile_name):
+    
+    f1 = open(filename1)
+
+    outfile = open(outfile_name, 'w')
+
+    for line in f1:
+        fields = line.strip().split('\t')
+        
+        print >> outfile, '%s,%s,%s' % (fields[0],fields[1],fields[2])
 
 def format_data(filename1,filename2,outfile_name):
     
@@ -14,17 +30,12 @@ def format_data(filename1,filename2,outfile_name):
 
     for line in f2:
         line = line.strip()
+        fields = line.strip().split(',')
 
         print >> outfile, '%s,%s' % (fields[0],fields[1]) + ",0"
     outfile.close()
 
 #format_data("setB.a.time.fixed", "setB.b.time.fixed", './logistic.test.time')
-
-#model = log.train_logistic_model(['../nmf/logistic.feature.time'], '../nmf/logistic.test.time') 
-
-
-#log.predict_logistic_model(model, "../nmf/who_rated_what_2006_global_predictions_fixed.txt",
-#                       ["../nmf/who_rated_what_2006_global_predictions_fixed.txt"], outfile_name='./prediction.time', correct_imbalance = .14)
 
 
 def compute_rmse(prediction_file, test_file):
@@ -46,9 +57,9 @@ def compute_rmse(prediction_file, test_file):
     for line in f2:
         fields = line.strip().split(',')
         if int(fields[2]) == 0:
-            test_dict[(fields[1],fields[0])] = 0.0
+            test_dict[(fields[0],fields[1])] = 0.0
         else:
-            test_dict[(fields[1],fields[0])] = 1.0
+            test_dict[(fields[0],fields[1])] = 1.0
 
     se = 0.0
     zse = 0.0
@@ -66,4 +77,4 @@ def compute_rmse(prediction_file, test_file):
     print "predict rmse", rmse
     return rmse
 
-compute_rmse('./prediction.time', 'KDD_2007_who_rated_what.txt')
+#compute_rmse('./prediction.time', 'KDD_2007_who_rated_what.txt')

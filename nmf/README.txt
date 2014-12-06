@@ -1,12 +1,23 @@
-
+Author: Renee Rao
 
 Feature: NMF
 This is the code we used to compute our NMF features. It is quite slow, and probably best to run on  an EC2 instance. 
 
-To compute the features for a set of data:
+To get nmf features on validation setA.a (or setA.b,setB.a,setB.b):
 
+Run the function in python with the following inputs
 
+inputs: filename = 'pre_2005.training' (available at C3/stat157-uq85def/shared/netflix/training2/pre_2005.training)
+   	test_filename = 'setA.a', (avaiable at C3/stat157-uq85def/shared/netflix/feature_sample/setA.a
+	dir_prefix ='./setA.a.nmf.validation'
 
+	
+To get nmf features on test set 2006:
+
+inputs:
+	filename ='training_set.txt' (available at C3/stat157-uq85def/shared/netflix/training2/training_set.txt)
+	test_filename = 'who_rated_what_2006.txt' (available at C3/stat157-uq85def/shared/netflix/test_sets/who_rated_what_2006.txt')
+	dir_prefix = './who_rated_what_2006.nmf.test'
 
 
 Graphs:
